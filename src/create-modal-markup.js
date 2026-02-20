@@ -30,7 +30,7 @@
       /<\/section>/i,
       '  <div class="footer-left">\n' +
         '    <div class="note note-credit">{{CREDIT_HTML}} - v{{APP_VERSION}}</div>\n' +
-        '    <div class="note note-feedback">Have any suggestions or bugs? <a href="https://github.com/eliogos/clickup-task-update-template/issues" target="_blank" rel="noopener noreferrer">https://github.com/eliogos/clickup-task-update-template/issues</a></div>\n' +
+        '    <div class="note note-feedback">Have any suggestions and bug reports? <a href="https://github.com/eliogos/clickup-task-update-template/issues" target="_blank" rel="noopener noreferrer">https://github.com/eliogos/clickup-task-update-template/issues</a></div>\n' +
         "  </div>\n" +
         "</section>"
     );
@@ -84,7 +84,7 @@
 
   function getFallbackTemplate() {
     return `
-<div class="modal" id="modal" popover="auto">
+<div class="modal" id="modal" popover="manual">
   <section class="modal-card" role="dialog" aria-modal="true" aria-label="Insert Update Template">
     <div class="card-header-row">
       <p class="title">Insert Update Template</p>
@@ -108,6 +108,12 @@
             <div class="field-stack label-stack">
               <input class="field label-input" id="label" value="{{DEFAULT_LABEL}}" aria-describedby="label-error" />
               <p class="field-subtext field-subtext-error" id="label-error" hidden>Label is required.</p>
+              <div class="label-suggestions" aria-label="Label suggestions">
+                <span class="field-subtext">Suggestions:</span>
+                <div class="label-chip-row">
+                  {{LABEL_SUGGESTION_CHIPS}}
+                </div>
+              </div>
             </div>
             <div class="field-stack number-stack">
               <div class="num-controls" id="num-controls" aria-label="Update number">
@@ -163,14 +169,7 @@
         </div>
 
         <div class="footer-row">
-          <div class="footer-left">
-            <div class="note note-feedback">
-              Have any suggestions or bugs?
-              <a href="https://github.com/eliogos/clickup-task-update-template/issues" target="_blank" rel="noopener noreferrer">
-                https://github.com/eliogos/clickup-task-update-template/issues
-              </a>
-            </div>
-          </div>
+          <div class="footer-left"></div>
           <div class="footer-right">
             <div class="note">You can insert Files and Mentions after inserting this template.</div>
             <div class="actions">
@@ -199,10 +198,18 @@
 
             <div class="settings-field">
               <label class="settings-label">Density Scale</label>
-              <div class="settings-segmented" id="density-scale-group" role="tablist" aria-label="Density Scale">
-                <button class="settings-segment-btn" type="button" data-density-scale-option="1">1x</button>
-                <button class="settings-segment-btn" type="button" data-density-scale-option="2">2x</button>
-                <button class="settings-segment-btn" type="button" data-density-scale-option="3">3x</button>
+              <div class="settings-segmented" id="density-group" role="tablist" aria-label="Density">
+                <button class="settings-segment-btn" type="button" data-density-option="compact">Compact</button>
+                <button class="settings-segment-btn" type="button" data-density-option="comfortable">Comfortable</button>
+                <button class="settings-segment-btn" type="button" data-density-option="spacious">Spacious</button>
+                <button class="settings-segment-btn" type="button" data-density-option="custom">Custom</button>
+              </div>
+              <div class="density-custom-wrap" id="density-custom-wrap" hidden>
+                <label class="settings-label" for="density-custom-scale">Custom Scale</label>
+                <div class="density-custom-row">
+                  <input class="field density-custom-input" id="density-custom-scale" type="number" min="1" max="6" step="1" inputmode="numeric" />
+                  <span class="density-custom-suffix">x</span>
+                </div>
               </div>
             </div>
 
@@ -231,16 +238,18 @@
           </section>
 
           <section class="settings-section">
-            <p class="settings-section-title">Suggestions</p>
-            <p class="field-subtext">Click a chip to quickly set the label.</p>
-            <div class="label-chip-row">
-              {{LABEL_SUGGESTION_CHIPS}}
-            </div>
+            <p class="settings-section-title">About</p>
+            <div class="note note-credit">{{CREDIT_HTML}} - v{{APP_VERSION}}</div>
           </section>
 
           <section class="settings-section">
-            <p class="settings-section-title">About</p>
-            <div class="note note-credit">{{CREDIT_HTML}} - v{{APP_VERSION}}</div>
+            <p class="settings-section-title">Feedback</p>
+            <div class="note note-feedback">
+              Have any suggestions and bug reports?
+              <a href="https://github.com/eliogos/clickup-task-update-template/issues" target="_blank" rel="noopener noreferrer">
+                https://github.com/eliogos/clickup-task-update-template/issues
+              </a>
+            </div>
           </section>
 
           <section class="settings-section">

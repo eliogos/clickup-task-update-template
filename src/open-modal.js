@@ -9,12 +9,15 @@
   const FONT_SIZE_MIN = 10;
   const FONT_SIZE_MAX = 24;
   const THEME_OPTIONS = new Set(["light", "auto", "dark"]);
-  const DENSITY_SCALE_OPTIONS = new Set(["1", "2", "3"]);
+  const DENSITY_OPTIONS = new Set(["compact", "comfortable", "spacious", "custom"]);
+  const DENSITY_CUSTOM_MIN = 1;
+  const DENSITY_CUSTOM_MAX = 6;
   const COLOR_FILTER_OPTIONS = new Set(["none", "protanopia", "deuteranopia", "tritanopia", "achromatopsia"]);
   const DEFAULT_MODAL_SETTINGS = Object.freeze({
     sidebarCollapsed: false,
     theme: "auto",
-    densityScale: 2,
+    density: "comfortable",
+    densityCustomScale: 2,
     colorFilter: "none",
     editorFontSize: 13
   });
@@ -30,19 +33,22 @@
   function normalizeModalSettings(input) {
     const source = input && typeof input === "object" ? input : {};
     const theme = THEME_OPTIONS.has(source.theme) ? source.theme : DEFAULT_MODAL_SETTINGS.theme;
-    const legacyDensityScale = source.density === "compact"
-      ? 1
-      : source.density === "spacious"
-        ? 3
-        : source.density === "comfortable"
-          ? 2
-          : DEFAULT_MODAL_SETTINGS.densityScale;
-    const densityScale = Math.round(
+    const legacyScale = Math.round(
+      clampNumber(source.densityScale, DENSITY_CUSTOM_MIN, DENSITY_CUSTOM_MAX, DEFAULT_MODAL_SETTINGS.densityCustomScale)
+    );
+    const density = DENSITY_OPTIONS.has(source.density)
+      ? source.density
+      : legacyScale <= 1
+        ? "compact"
+        : legacyScale >= 3
+          ? "spacious"
+          : "comfortable";
+    const densityCustomScale = Math.round(
       clampNumber(
-        source.densityScale == null ? legacyDensityScale : source.densityScale,
-        1,
-        3,
-        DEFAULT_MODAL_SETTINGS.densityScale
+        source.densityCustomScale == null ? legacyScale : source.densityCustomScale,
+        DENSITY_CUSTOM_MIN,
+        DENSITY_CUSTOM_MAX,
+        DEFAULT_MODAL_SETTINGS.densityCustomScale
       )
     );
     const colorFilter = COLOR_FILTER_OPTIONS.has(source.colorFilter)
@@ -58,10 +64,26 @@
     return {
       sidebarCollapsed: Boolean(source.sidebarCollapsed),
       theme,
-      densityScale,
+      density,
+      densityCustomScale,
       colorFilter,
       editorFontSize
     };
+  }
+
+  function getColorFilterCss(mode) {
+    switch (String(mode || "").trim()) {
+      case "protanopia":
+        return "saturate(0.72) hue-rotate(-12deg) contrast(1.04)";
+      case "deuteranopia":
+        return "saturate(0.76) hue-rotate(8deg) contrast(1.03)";
+      case "tritanopia":
+        return "saturate(0.78) hue-rotate(-28deg) contrast(1.02)";
+      case "achromatopsia":
+        return "grayscale(1) contrast(1.08)";
+      default:
+        return "";
+    }
   }
 
   function readModalSettings() {
@@ -179,7 +201,9 @@
     const settingsSidebar = byId("settings-sidebar");
     const settingsToggle = byId("settings-toggle");
     const themeButtons = Array.from(shadow.querySelectorAll("[data-theme-option]"));
-    const densityButtons = Array.from(shadow.querySelectorAll("[data-density-scale-option]"));
+    const densityButtons = Array.from(shadow.querySelectorAll("[data-density-option]"));
+    const densityCustomWrap = byId("density-custom-wrap");
+    const densityCustomScaleInput = byId("density-custom-scale");
     const colorFilterInput = byId("color-filter-mode");
     const editorFontSizeInput = byId("editor-font-size-input");
     const editorFontSizeSlider = byId("editor-font-size-slider");
@@ -403,6 +427,13 @@
       labelChipRow.classList.toggle("at-end", atEnd);
     };
 
+    const autoResizeTextarea = (textarea) => {
+      if (!textarea) return;
+      textarea.style.height = "auto";
+      const minHeight = parseFloat(global.getComputedStyle(textarea).minHeight) || 0;
+      textarea.style.height = `${Math.max(minHeight, textarea.scrollHeight)}px`;
+    };
+
     const setSegmentedSelection = (buttons, attrName, selectedValue) => {
       buttons.forEach((button) => {
         const value = button.getAttribute(attrName);
@@ -421,12 +452,15 @@
 
     const applyModalSettings = () => {
       const resolvedTheme = getResolvedTheme();
+      const colorFilterCss = getColorFilterCss(settingsState.colorFilter) || "none";
       modalCard.setAttribute("data-theme", settingsState.theme);
       modalCard.setAttribute("data-resolved-theme", resolvedTheme);
-      modalCard.setAttribute("data-density-scale", String(settingsState.densityScale));
+      modalCard.setAttribute("data-density", settingsState.density);
       modalCard.setAttribute("data-color-filter", settingsState.colorFilter);
       modalCard.setAttribute("data-sidebar-collapsed", settingsState.sidebarCollapsed ? "true" : "false");
+      modalCard.style.setProperty("--density-custom-scale", String(settingsState.densityCustomScale));
       modalCard.style.setProperty("--editor-font-size", `${settingsState.editorFontSize}px`);
+      bannerPopover.style.filter = colorFilterCss;
 
       if (modalBodyLayout) {
         modalBodyLayout.classList.toggle("is-sidebar-collapsed", settingsState.sidebarCollapsed);
@@ -442,7 +476,15 @@
       }
 
       setSegmentedSelection(themeButtons, "data-theme-option", settingsState.theme);
-      setSegmentedSelection(densityButtons, "data-density-scale-option", String(settingsState.densityScale));
+      setSegmentedSelection(densityButtons, "data-density-option", settingsState.density);
+
+      if (densityCustomWrap) {
+        densityCustomWrap.hidden = settingsState.density !== "custom";
+      }
+
+      if (densityCustomScaleInput) {
+        densityCustomScaleInput.value = String(settingsState.densityCustomScale);
+      }
 
       if (colorFilterInput) {
         colorFilterInput.value = settingsState.colorFilter;
@@ -563,11 +605,35 @@
 
     densityButtons.forEach((button) => {
       button.addEventListener("click", () => {
-        const value = String(button.getAttribute("data-density-scale-option") || "").trim();
-        if (!DENSITY_SCALE_OPTIONS.has(value)) return;
-        commitModalSettings({ densityScale: parseInt(value, 10) });
+        const value = String(button.getAttribute("data-density-option") || "").trim();
+        if (!DENSITY_OPTIONS.has(value)) return;
+        commitModalSettings({ density: value });
       });
     });
+
+    if (densityCustomScaleInput) {
+      const applyDensityCustomScale = () => {
+        const value = Math.round(
+          clampNumber(
+            densityCustomScaleInput.value,
+            DENSITY_CUSTOM_MIN,
+            DENSITY_CUSTOM_MAX,
+            settingsState.densityCustomScale
+          )
+        );
+        commitModalSettings({ density: "custom", densityCustomScale: value });
+      };
+
+      densityCustomScaleInput.addEventListener("change", applyDensityCustomScale);
+      densityCustomScaleInput.addEventListener("blur", applyDensityCustomScale);
+      densityCustomScaleInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          applyDensityCustomScale();
+          densityCustomScaleInput.blur();
+        }
+      });
+    }
 
     if (colorFilterInput) {
       colorFilterInput.addEventListener("change", () => {
@@ -624,6 +690,11 @@
       }
     }
 
+    const autoResizeTextareas = [accInput, blockInput, focusInput, notesInput].filter(Boolean);
+    autoResizeTextareas.forEach((textarea) => {
+      textarea.addEventListener("input", () => autoResizeTextarea(textarea));
+    });
+
     accInput.addEventListener("input", validate);
     statusInput.addEventListener("change", applyStatusAccent);
 
@@ -632,6 +703,7 @@
     syncNumberVisibility();
     syncLabelChipOverflowState();
     applyModalSettings();
+    autoResizeTextareas.forEach(autoResizeTextarea);
 
     if (addNotesBtn && notesGroup && notesInput) {
       const setNotesState = (isVisible) => {
@@ -644,20 +716,16 @@
         const willShow = notesGroup.hidden;
         if (willShow) {
           setNotesState(true);
+          autoResizeTextarea(notesInput);
           notesInput.focus();
           return;
         }
         notesInput.value = "";
+        notesInput.style.height = "";
         setNotesState(false);
       });
     }
     cancelBtn.onclick = close;
-
-    modal.addEventListener("click", (event) => {
-      if (event.target === modal) {
-        close();
-      }
-    });
 
     insertBtn.onclick = () => {
       if (typeof buildHTML !== "function" || typeof simulatePaste !== "function") return;

@@ -4,6 +4,18 @@ Userscript that opens a modal in ClickUp when you type `--update` and press spac
 
 ## What's New
 
+### 14.1.0 (2026-02-20)
+- Moved label suggestion chips back into the main form below the label field.
+- Moved the feedback text/link (`Have any suggestions and bug reports?`) into the Settings sidebar.
+- Fixed light mode number editor visibility by forcing dark text/caret colors.
+- Updated density controls to include `Compact`, `Comfortable`, `Spacious`, and `Custom`.
+- Added custom density scale input for `Custom` mode (`1x` to `6x` integer range).
+- Applied color blindness filters to the banner color popover for consistency.
+- Removed modal close-on-outside-click behavior.
+- Added textarea auto-resize behavior for `Accomplishments`, `Blockers`, `Current Focus`, and `Notes`.
+- Refined sidebar collapse animation with fade/visibility/overflow containment to reduce content glitching.
+- Bumped script version to `14.1.0`.
+
 ### 14.0.0 (2026-02-20)
 - Fixed sidebar collapse behavior so collapsing settings now animates and the modal card resizes with it.
 - Updated density controls to integer scale options: `1x`, `2x`, `3x`.

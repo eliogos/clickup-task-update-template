@@ -209,7 +209,8 @@ textarea.field,
 textarea.field {
   width: 100%;
   min-height: 80px;
-  resize: vertical;
+  resize: none;
+  overflow-y: hidden;
   scrollbar-width: thin;
   scrollbar-color: #7c96f0 #0f1420;
 }

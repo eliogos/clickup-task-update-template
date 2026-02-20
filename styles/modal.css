@@ -154,6 +154,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
   gap: 14px;
   min-height: 0;
+  overflow: hidden;
   transition:
     grid-template-columns 240ms cubic-bezier(0.2, 0.9, 0.2, 1),
     gap 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
@@ -170,28 +171,33 @@
   min-width: 0;
   border-left: 1px solid var(--panel-border);
   padding-left: 14px;
-  max-width: 320px;
-  max-height: 2000px;
+  visibility: visible;
   opacity: 1;
   transform: translateX(0);
   overflow: hidden;
+  contain: layout paint;
   transition:
-    max-width 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
-    max-height 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
     opacity 200ms ease,
-    transform 200ms ease,
-    padding-left 200ms ease;
+    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    padding-left 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    border-left-color 220ms ease,
+    visibility 0s linear 0s;
 }
 
 .modal-body-layout.is-sidebar-collapsed .settings-sidebar {
   grid-column: 2;
-  max-width: 0;
-  max-height: 0;
+  visibility: hidden;
   opacity: 0;
-  transform: translateX(12px);
+  transform: translateX(14px);
   padding-left: 0;
   border-left-color: transparent;
   pointer-events: none;
+  transition:
+    opacity 180ms ease,
+    transform 200ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    padding-left 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    border-left-color 200ms ease,
+    visibility 0s linear 180ms;
 }
 
 .modal-body-layout.is-sidebar-collapsed {
@@ -208,6 +214,14 @@
   padding-right: 4px;
   scrollbar-width: thin;
   scrollbar-color: var(--scroll-thumb-a) var(--scroll-track);
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 160ms ease, transform 200ms ease;
+}
+
+.modal-body-layout.is-sidebar-collapsed .settings-sidebar-inner {
+  opacity: 0;
+  transform: translateX(8px);
 }
 
 .settings-sidebar-inner::-webkit-scrollbar {
@@ -316,6 +330,28 @@
   width: 100%;
   margin: 0;
   accent-color: #4b84ff;
+}
+
+.density-custom-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.density-custom-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.density-custom-input {
+  width: 84px;
+  text-align: right;
+}
+
+.density-custom-suffix {
+  font-size: 11px;
+  color: var(--muted-text);
 }
 
 .row-inline {
@@ -446,22 +482,22 @@
   color: #c6ddff;
 }
 
-.modal-card[data-density-scale="1"] {
+.modal-card[data-density="compact"] {
   --section-gap: 10px;
   --settings-gap: 10px;
   --card-padding: 18px;
 }
 
-.modal-card[data-density-scale="2"] {
-  --section-gap: 14px;
-  --settings-gap: 12px;
-  --card-padding: 22px;
-}
-
-.modal-card[data-density-scale="3"] {
+.modal-card[data-density="spacious"] {
   --section-gap: 20px;
   --settings-gap: 16px;
   --card-padding: 28px;
+}
+
+.modal-card[data-density="custom"] {
+  --section-gap: calc(8px + (var(--density-custom-scale, 2) * 4px));
+  --settings-gap: calc(6px + (var(--density-custom-scale, 2) * 3px));
+  --card-padding: calc(14px + (var(--density-custom-scale, 2) * 4px));
 }
 
 .modal-card[data-sidebar-collapsed="true"] {
@@ -506,6 +542,11 @@
   background: #fff;
   border-color: #bed0ef;
   color: #122245;
+}
+
+.modal-card[data-resolved-theme="light"] .num-input {
+  color: #122245;
+  caret-color: #122245;
 }
 
 .modal-card[data-resolved-theme="light"] .field:focus {
