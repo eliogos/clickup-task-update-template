@@ -17,8 +17,8 @@
 // @require      https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/src/create-modal-markup.js
 // @require      https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/src/open-modal.js
 // @require      https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/src/bootstrap.js
-// @updateURL    https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/script.user.js
-// @downloadURL  https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/script.user.js
+// @updateURL    https://github.com/eliogos/clickup-task-update-template/raw/refs/heads/main/script.user.js
+// @downloadURL  https://github.com/eliogos/clickup-task-update-template/raw/refs/heads/main/script.user.js
 // ==/UserScript==
 
 (function () {
