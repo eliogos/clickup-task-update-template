@@ -5,8 +5,73 @@
   const constants = app.constants || {};
   const FONT_STYLESHEET_HREF =
     "https://fonts.googleapis.com/css2?family=Darumadrop+One&family=Geist+Mono:wght@100..900&family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=National+Park:wght@200..800&family=VT323&display=swap";
+  const SETTINGS_STORAGE_KEY = "clickup-update-modal.settings.v1";
+  const FONT_SIZE_MIN = 10;
+  const FONT_SIZE_MAX = 24;
+  const THEME_OPTIONS = new Set(["light", "auto", "dark"]);
+  const DENSITY_OPTIONS = new Set(["compact", "comfortable", "spacious"]);
+  const COLOR_FILTER_OPTIONS = new Set(["none", "protanopia", "deuteranopia", "tritanopia", "achromatopsia"]);
+  const DEFAULT_MODAL_SETTINGS = Object.freeze({
+    sidebarCollapsed: false,
+    theme: "auto",
+    density: "comfortable",
+    colorFilter: "none",
+    editorFontSize: 13
+  });
 
   let modalCssCache = null;
+
+  function clampNumber(value, min, max, fallback) {
+    const n = parseFloat(String(value).trim());
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(max, Math.max(min, n));
+  }
+
+  function normalizeModalSettings(input) {
+    const source = input && typeof input === "object" ? input : {};
+    const theme = THEME_OPTIONS.has(source.theme) ? source.theme : DEFAULT_MODAL_SETTINGS.theme;
+    const density = DENSITY_OPTIONS.has(source.density) ? source.density : DEFAULT_MODAL_SETTINGS.density;
+    const colorFilter = COLOR_FILTER_OPTIONS.has(source.colorFilter)
+      ? source.colorFilter
+      : DEFAULT_MODAL_SETTINGS.colorFilter;
+    const editorFontSize = clampNumber(
+      source.editorFontSize,
+      FONT_SIZE_MIN,
+      FONT_SIZE_MAX,
+      DEFAULT_MODAL_SETTINGS.editorFontSize
+    );
+
+    return {
+      sidebarCollapsed: Boolean(source.sidebarCollapsed),
+      theme,
+      density,
+      colorFilter,
+      editorFontSize
+    };
+  }
+
+  function readModalSettings() {
+    try {
+      const raw = global.localStorage ? global.localStorage.getItem(SETTINGS_STORAGE_KEY) : "";
+      if (!raw) return { ...DEFAULT_MODAL_SETTINGS };
+      return normalizeModalSettings(JSON.parse(raw));
+    } catch {
+      return { ...DEFAULT_MODAL_SETTINGS };
+    }
+  }
+
+  function saveModalSettings(settings) {
+    try {
+      if (!global.localStorage) return;
+      global.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(normalizeModalSettings(settings)));
+    } catch {
+      // Best-effort persistence only.
+    }
+  }
+
+  function formatFontSize(value) {
+    return Number.isInteger(value) ? String(value) : String(parseFloat(value.toFixed(2)));
+  }
 
   function ensureFontLinks() {
     if (document.head.querySelector('link[data-clickup-update-fonts="styles"]')) return;
@@ -71,6 +136,7 @@
 
     const byId = (id) => shadow.getElementById(id);
     const modal = byId("modal");
+    const modalCard = shadow.querySelector(".modal-card");
     const bannerTrigger = byId("banner-trigger");
     const bannerPreview = byId("banner-preview");
     const bannerPopover = byId("banner-popover");
@@ -95,12 +161,20 @@
     const addNotesBtn = byId("add-notes");
     const notesGroup = byId("notes-group");
     const notesInput = byId("notes");
+    const modalBodyLayout = byId("modal-body-layout");
+    const settingsSidebar = byId("settings-sidebar");
+    const settingsToggle = byId("settings-toggle");
+    const themeButtons = Array.from(shadow.querySelectorAll("[data-theme-option]"));
+    const densityButtons = Array.from(shadow.querySelectorAll("[data-density-option]"));
+    const colorFilterInput = byId("color-filter-mode");
+    const editorFontSizeInput = byId("editor-font-size-input");
+    const editorFontSizeSlider = byId("editor-font-size-slider");
 
     if (
       !modal || !labelInput || !numberInput || !accInput ||
       !insertBtn || !incBtn || !decBtn || !cancelBtn ||
       !statusInput || !blockInput || !focusInput ||
-      !bannerTrigger || !bannerPreview || !bannerPopover
+      !bannerTrigger || !bannerPreview || !bannerPopover || !modalCard
     ) {
       host.remove();
       return;
@@ -116,6 +190,11 @@
     let closed = false;
     let close = () => {};
     let chipResizeObserver = null;
+    let settingsState = readModalSettings();
+    const systemColorScheme = typeof global.matchMedia === "function"
+      ? global.matchMedia("(prefers-color-scheme: dark)")
+      : null;
+    let onSystemColorSchemeChange = null;
 
     const cleanup = () => {
       if (closed) return;
@@ -131,6 +210,14 @@
       if (chipResizeObserver) {
         chipResizeObserver.disconnect();
         chipResizeObserver = null;
+      }
+      if (systemColorScheme && onSystemColorSchemeChange) {
+        if (typeof systemColorScheme.removeEventListener === "function") {
+          systemColorScheme.removeEventListener("change", onSystemColorSchemeChange);
+        } else if (typeof systemColorScheme.removeListener === "function") {
+          systemColorScheme.removeListener(onSystemColorSchemeChange);
+        }
+        onSystemColorSchemeChange = null;
       }
       host.remove();
     };
@@ -302,6 +389,65 @@
       labelChipRow.classList.toggle("at-end", atEnd);
     };
 
+    const setSegmentedSelection = (buttons, attrName, selectedValue) => {
+      buttons.forEach((button) => {
+        const value = button.getAttribute(attrName);
+        const isActive = value === selectedValue;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+    };
+
+    const getResolvedTheme = () => {
+      if (settingsState.theme === "auto") {
+        return systemColorScheme && systemColorScheme.matches ? "dark" : "light";
+      }
+      return settingsState.theme;
+    };
+
+    const applyModalSettings = () => {
+      const resolvedTheme = getResolvedTheme();
+      modalCard.setAttribute("data-theme", settingsState.theme);
+      modalCard.setAttribute("data-resolved-theme", resolvedTheme);
+      modalCard.setAttribute("data-density", settingsState.density);
+      modalCard.setAttribute("data-color-filter", settingsState.colorFilter);
+      modalCard.style.setProperty("--editor-font-size", `${settingsState.editorFontSize}px`);
+
+      if (modalBodyLayout) {
+        modalBodyLayout.classList.toggle("is-sidebar-collapsed", settingsState.sidebarCollapsed);
+      }
+
+      if (settingsSidebar) {
+        settingsSidebar.setAttribute("aria-hidden", settingsState.sidebarCollapsed ? "true" : "false");
+      }
+
+      if (settingsToggle) {
+        settingsToggle.textContent = settingsState.sidebarCollapsed ? "Show Settings" : "Hide Settings";
+        settingsToggle.setAttribute("aria-expanded", settingsState.sidebarCollapsed ? "false" : "true");
+      }
+
+      setSegmentedSelection(themeButtons, "data-theme-option", settingsState.theme);
+      setSegmentedSelection(densityButtons, "data-density-option", settingsState.density);
+
+      if (colorFilterInput) {
+        colorFilterInput.value = settingsState.colorFilter;
+      }
+
+      if (editorFontSizeSlider) {
+        editorFontSizeSlider.value = String(Math.round(settingsState.editorFontSize));
+      }
+
+      if (editorFontSizeInput) {
+        editorFontSizeInput.value = formatFontSize(settingsState.editorFontSize);
+      }
+    };
+
+    const commitModalSettings = (updates) => {
+      settingsState = normalizeModalSettings({ ...settingsState, ...updates });
+      saveModalSettings(settingsState);
+      applyModalSettings();
+    };
+
     selected = allColors.includes(defaultBannerColor) ? defaultBannerColor : allColors[0];
     renderPalette();
 
@@ -386,6 +532,83 @@
       }
     }
 
+    if (settingsToggle) {
+      settingsToggle.addEventListener("click", () => {
+        commitModalSettings({ sidebarCollapsed: !settingsState.sidebarCollapsed });
+      });
+    }
+
+    themeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const value = button.getAttribute("data-theme-option");
+        if (!value || !THEME_OPTIONS.has(value)) return;
+        commitModalSettings({ theme: value });
+      });
+    });
+
+    densityButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const value = button.getAttribute("data-density-option");
+        if (!value || !DENSITY_OPTIONS.has(value)) return;
+        commitModalSettings({ density: value });
+      });
+    });
+
+    if (colorFilterInput) {
+      colorFilterInput.addEventListener("change", () => {
+        const value = String(colorFilterInput.value || "").trim();
+        if (!COLOR_FILTER_OPTIONS.has(value)) return;
+        commitModalSettings({ colorFilter: value });
+      });
+    }
+
+    if (editorFontSizeSlider) {
+      editorFontSizeSlider.addEventListener("input", () => {
+        const value = clampNumber(
+          editorFontSizeSlider.value,
+          FONT_SIZE_MIN,
+          FONT_SIZE_MAX,
+          settingsState.editorFontSize
+        );
+        commitModalSettings({ editorFontSize: Math.round(value) });
+      });
+    }
+
+    if (editorFontSizeInput) {
+      const syncFromTextBox = () => {
+        const value = clampNumber(
+          editorFontSizeInput.value,
+          FONT_SIZE_MIN,
+          FONT_SIZE_MAX,
+          settingsState.editorFontSize
+        );
+        commitModalSettings({ editorFontSize: value });
+      };
+
+      editorFontSizeInput.addEventListener("change", syncFromTextBox);
+      editorFontSizeInput.addEventListener("blur", syncFromTextBox);
+      editorFontSizeInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          syncFromTextBox();
+          editorFontSizeInput.blur();
+        }
+      });
+    }
+
+    if (systemColorScheme) {
+      onSystemColorSchemeChange = () => {
+        if (settingsState.theme === "auto") {
+          applyModalSettings();
+        }
+      };
+      if (typeof systemColorScheme.addEventListener === "function") {
+        systemColorScheme.addEventListener("change", onSystemColorSchemeChange);
+      } else if (typeof systemColorScheme.addListener === "function") {
+        systemColorScheme.addListener(onSystemColorSchemeChange);
+      }
+    }
+
     accInput.addEventListener("input", validate);
     statusInput.addEventListener("change", applyStatusAccent);
 
@@ -393,6 +616,7 @@
     syncLabelChipState();
     syncNumberVisibility();
     syncLabelChipOverflowState();
+    applyModalSettings();
 
     if (addNotesBtn && notesGroup && notesInput) {
       const setNotesState = (isVisible) => {

@@ -5,6 +5,8 @@
   padding: 8px 10px;
   border-radius: 10px;
   outline: none;
+  font-size: var(--editor-font-size, 13px);
+  line-height: 1.35;
 }
 
 input.field,
@@ -198,6 +200,7 @@ textarea.field,
   background: transparent;
   color: #fff;
   outline: none;
+  font-size: var(--editor-font-size, 13px);
 }
 
 .append-number-wrap {
