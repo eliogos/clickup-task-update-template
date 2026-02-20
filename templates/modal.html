@@ -1,53 +1,55 @@
-<section class="modal" id="modal" popover="auto" role="dialog" aria-modal="true" aria-label="Insert Update Template">
-  <p class="title">Insert Update Template</p>
+<div class="modal" id="modal" popover="auto">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-label="Insert Update Template">
+    <p class="title">Insert Update Template</p>
 
-  <div class="row-inline">
-    <div class="palette" id="palette" aria-label="Banner color"></div>
-    <div class="field-stack label-stack">
-      <input class="field label-input" id="label" value="{{DEFAULT_LABEL}}" aria-describedby="label-error" />
-      <p class="field-subtext field-subtext-error" id="label-error" hidden>Label is required.</p>
-    </div>
-    <div class="field-stack number-stack">
-      <div class="num-controls" id="num-controls" aria-label="Update number">
-        <button class="num-btn" id="dec" type="button">-</button>
-        <input class="num-input" id="number" value="{{DEFAULT_NUMBER}}" inputmode="numeric" aria-describedby="number-error" />
-        <button class="num-btn" id="inc" type="button">+</button>
+    <div class="row-inline">
+      <div class="palette" id="palette" aria-label="Banner color"></div>
+      <div class="field-stack label-stack">
+        <input class="field label-input" id="label" value="{{DEFAULT_LABEL}}" aria-describedby="label-error" />
+        <p class="field-subtext field-subtext-error" id="label-error" hidden>Label is required.</p>
       </div>
-      <p class="field-subtext field-subtext-error" id="number-error" hidden>Update number is required.</p>
+      <div class="field-stack number-stack">
+        <div class="num-controls" id="num-controls" aria-label="Update number">
+          <button class="num-btn" id="dec" type="button">-</button>
+          <input class="num-input" id="number" value="{{DEFAULT_NUMBER}}" inputmode="numeric" aria-describedby="number-error" />
+          <button class="num-btn" id="inc" type="button">+</button>
+        </div>
+        <p class="field-subtext field-subtext-error" id="number-error" hidden>Update number is required.</p>
+      </div>
     </div>
-  </div>
 
-  <div class="group">
-    <label>Status<span class="req">*</span></label><br/>
-    <select class="field status-select" id="status">
-      <option>Not Started</option>
-      <option selected>In Progress</option>
-      <option>For QA</option>
-      <option>Completed</option>
-    </select>
-  </div>
+    <div class="group">
+      <label>Status<span class="req">*</span></label><br/>
+      <select class="field status-select" id="status">
+        <option>Not Started</option>
+        <option selected>In Progress</option>
+        <option>For QA</option>
+        <option>Completed</option>
+      </select>
+    </div>
 
-  <div class="group">
-    <label>Accomplishments<span class="req">*</span></label>
-    <textarea class="field" id="acc" aria-describedby="acc-error"></textarea>
-    <p class="field-subtext field-subtext-error" id="acc-error" hidden>Accomplishments is required.</p>
-  </div>
+    <div class="group">
+      <label>Accomplishments<span class="req">*</span></label>
+      <textarea class="field" id="acc" aria-describedby="acc-error"></textarea>
+      <p class="field-subtext field-subtext-error" id="acc-error" hidden>Accomplishments is required.</p>
+    </div>
 
-  <div class="group">
-    <label>Blockers</label>
-    <textarea class="field" id="block"></textarea>
-  </div>
+    <div class="group">
+      <label>Blockers</label>
+      <textarea class="field" id="block"></textarea>
+    </div>
 
-  <div class="group">
-    <label>Current Focus</label>
-    <textarea class="field" id="focus"></textarea>
-  </div>
+    <div class="group">
+      <label>Current Focus</label>
+      <textarea class="field" id="focus"></textarea>
+    </div>
 
-  <div class="actions">
-    <button class="btn" id="cancel" type="button">Cancel</button>
-    <button class="btn btn-primary" id="insert" type="button" disabled>Insert</button>
-  </div>
+    <div class="actions">
+      <button class="btn" id="cancel" type="button">Cancel</button>
+      <button class="btn btn-primary" id="insert" type="button" disabled>Insert</button>
+    </div>
 
-  <div class="note">You can insert Files and Mentions after inserting this template.</div>
-  <div class="note note-credit">{{CREDIT_HTML}} - v{{APP_VERSION}}</div>
-</section>
+    <div class="note">You can insert Files and Mentions after inserting this template.</div>
+    <div class="note note-credit">{{CREDIT_HTML}} - v{{APP_VERSION}}</div>
+  </section>
+</div>
