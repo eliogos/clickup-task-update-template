@@ -101,7 +101,7 @@ select.field {
 
 /* ================= PICKER PANEL ================= */
 
-.status-select::picker {
+.status-select::picker(select) {
   appearance: base-select;
 
   border: 1px solid #3f4863;
