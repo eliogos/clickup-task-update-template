@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ClickUp --update Modal
 // @namespace    clickup-update-modal
-// @version      9.2
+// @version      9.3
 // @description  Insert update template in ClickUp
 // @match        https://app.clickup.com/*
 // @grant        GM_getResourceText
@@ -20,20 +20,14 @@
 // @require      https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/src/create-modal-markup.js
 // @require      https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/src/open-modal.js
 // @require      https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/src/bootstrap.js
-// @require      https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/src/hot-reload.js
 // @updateURL    https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/script.user.js
 // @downloadURL  https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/script.user.js
-// @require      https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0,0
 // ==/UserScript==
 
 (function () {
   "use strict";
 
   const app = globalThis.ClickUpUpdateApp;
-  if (app && typeof app.setupHotReload === "function") {
-    app.setupHotReload();
-  }
-
   if (app && typeof app.bootstrap === "function") {
     app.bootstrap();
   }

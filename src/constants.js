@@ -32,37 +32,7 @@
       "green-strong",
       "grey-strong"
     ],
-    mutedOrder: ["red", "orange", "yellow", "blue", "purple", "pink", "green", "grey"],
-    hotReload: {
-      enabled: false,
-      autoStart: false,
-      pollMs: 4000,
-      bindHotkeys: true,
-      reloadHotkey: { ctrl: true, alt: true, shift: true, key: "r" },
-      togglePollingHotkey: { ctrl: true, alt: true, shift: true, key: "p" },
-      localStorageEnableKey: "clickupUpdateHotReload",
-      localStorageAutoStartKey: "clickupUpdateHotReloadAuto",
-      baseUrl: "https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/",
-      moduleFiles: [
-        "src/constants.js",
-        "src/get-modal-css.js",
-        "src/get-modal-template.js",
-        "src/get-visible-editor.js",
-        "src/simulate-paste.js",
-        "src/build-html.js",
-        "src/is-popover-open.js",
-        "src/create-modal-markup.js",
-        "src/open-modal.js",
-        "src/bootstrap.js"
-      ],
-      cssFiles: [
-        "styles/modal.css",
-        "styles/inputs.css",
-        "styles/selects.css",
-        "styles/buttons.css"
-      ],
-      templateFile: "templates/modal.html"
-    }
+    mutedOrder: ["red", "orange", "yellow", "blue", "purple", "pink", "green", "grey"]
   };
 
   app.constants.allColors = [...app.constants.strongOrder, ...app.constants.mutedOrder];
