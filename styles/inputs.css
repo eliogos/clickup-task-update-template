@@ -13,8 +13,8 @@
 }
 
 .label-input {
-  flex: 1 1 180px;
-  min-width: 180px;
+  flex: 1 1 200px;
+  min-width: 160px;
 }
 
 .field-stack {
@@ -35,8 +35,9 @@
 }
 
 .label-stack {
-  flex: 1 1 180px;
-  min-width: 180px;
+  flex: 1 1 200px;
+  min-width: 160px;
+  max-width: 320px;
 }
 
 .number-stack {

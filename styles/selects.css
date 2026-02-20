@@ -1,14 +1,14 @@
-@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0,0");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=keyboard_arrow_down");
 
 select.field {
-  min-width: 180px;
+  min-width: 0;
 }
 
 .material-symbols-outlined {
   font-family: "Material Symbols Outlined", system-ui, sans-serif;
   font-weight: normal;
   font-style: normal;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1;
   letter-spacing: normal;
   text-transform: none;
@@ -17,7 +17,7 @@ select.field {
   word-wrap: normal;
   direction: ltr;
   -webkit-font-smoothing: antialiased;
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 200, "opsz" 48;
 }
 
 .select-wrap {
@@ -45,11 +45,14 @@ select.field {
 }
 
 .banner-select-wrap {
-  min-width: 176px;
+  width: 132px;
+  min-width: 132px;
+  flex: 0 0 132px;
 }
 
 .banner-select-wrap .banner-select {
   padding-left: 30px;
+  padding-right: 30px;
 }
 
 .banner-select-wrap .banner-preview {
@@ -68,6 +71,7 @@ select.field {
   border-color: #3b4259;
   background: #10131a;
   color: #ecf1ff;
+  min-width: 180px;
   --status-accent: #2f6fed;
   --status-accent-rgb: 47, 111, 237;
   transition: border-color 150ms ease, box-shadow 150ms ease;
@@ -86,6 +90,7 @@ select.field {
 
 .status-select-wrap {
   --status-accent: #2f6fed;
+  width: fit-content;
 }
 
 .status-select-wrap[data-status="Not Started"] { --status-accent: #ec407a; }

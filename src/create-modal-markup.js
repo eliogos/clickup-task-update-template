@@ -77,7 +77,7 @@
         <div class="select-wrap banner-select-wrap">
           <span class="banner-preview {{DEFAULT_BANNER_COLOR}}" id="banner-preview" aria-hidden="true"></span>
           <select class="field banner-select" id="banner-color" aria-label="Banner color"></select>
-          <span class="material-symbols-outlined select-icon" aria-hidden="true">expand_more</span>
+          <span class="material-symbols-outlined select-icon" aria-hidden="true">keyboard_arrow_down</span>
         </div>
       </div>
       <div class="field-stack label-stack">
@@ -102,7 +102,7 @@
           <option>For QA</option>
           <option>Completed</option>
         </select>
-        <span class="material-symbols-outlined select-icon" aria-hidden="true">expand_more</span>
+        <span class="material-symbols-outlined select-icon" aria-hidden="true">keyboard_arrow_down</span>
       </div>
     </div>
     <div class="group">
