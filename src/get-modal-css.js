@@ -24,17 +24,23 @@
       * { box-sizing: border-box; font-family: system-ui, sans-serif; }
       .modal {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        inset: 0;
+        padding: 12px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-card {
         width: min(720px, calc(100vw - 24px));
+        max-height: calc(100vh - 24px);
+        overflow: auto;
         background: #1a1a1a;
         color: #fff;
         padding: 22px;
         border-radius: 14px;
         border: 1px solid #2f2f2f;
         box-shadow: 0 20px 60px rgba(0,0,0,.5);
-        display: none;
+        display: flex;
         flex-direction: column;
         gap: 14px;
       }
