@@ -1,14 +1,260 @@
+:host {
+  all: initial;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  font-family: system-ui, sans-serif;
+}
+
 .modal {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%,-50%);
-    width: 720px;
-    background: #1a1a1a;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(720px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+  background: #1a1a1a;
+  color: #fff;
+  padding: 22px;
+  border-radius: 14px;
+  border: 1px solid #2f2f2f;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal:popover-open,
+.modal.is-open-fallback {
+  display: flex;
+}
+
+.modal::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(1px);
+}
+
+.title {
+  font-weight: 700;
+  font-size: 16px;
+  margin: 0;
+}
+
+.row-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.palette {
+  display: grid;
+  grid-template-columns: repeat(8, 22px);
+  grid-auto-rows: 22px;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #2e2e2e;
+  border-radius: 12px;
+  background: #111;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  outline: none;
+  background: #999;
+}
+
+.swatch:hover {
+  filter: brightness(1.08);
+}
+
+.swatch.selected {
+  border-color: #fff;
+}
+
+.field {
+  background: #111;
+  color: #fff;
+  border: 1px solid #333;
+  padding: 8px 10px;
+  border-radius: 10px;
+  outline: none;
+}
+
+.field:focus {
+  border-color: #4b84ff;
+  box-shadow: 0 0 0 2px rgba(75, 132, 255, 0.25);
+}
+
+.label-input {
+  flex: 1 1 180px;
+  min-width: 180px;
+}
+
+.num-controls {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #333;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #111;
+}
+
+.num-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.num-btn:hover {
+  background: #181818;
+}
+
+.num-input {
+  width: 56px;
+  height: 34px;
+  text-align: center;
+  border: none;
+  background: transparent;
+  color: #fff;
+  outline: none;
+}
+
+.group label {
+  display: inline-block;
+  margin: 0 0 6px 0;
+  font-size: 12px;
+}
+
+textarea.field {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+}
+
+select.field {
+  min-width: 180px;
+}
+
+.status-select {
+  cursor: pointer;
+}
+
+@supports (appearance: base-select) and selector(select::picker(select)) {
+  .status-select {
+    appearance: base-select;
+    padding-right: 36px;
+  }
+
+  .status-select::picker-icon {
+    color: #9ab8ff;
+    transition: transform 150ms ease;
+  }
+
+  .status-select:open::picker-icon {
+    transform: rotate(180deg);
+  }
+
+  .status-select::picker(select) {
+    appearance: base-select;
+    border: 1px solid #333;
+    border-radius: 12px;
+    background: #141414;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.45);
+    margin-top: 6px;
+  }
+
+  .status-select option {
+    background: #141414;
     color: #fff;
-    padding: 22px;
-    border-radius: 14px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.5);
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+    padding: 8px 10px;
+  }
+
+  .status-select option:checked {
+    background: #2f6fed;
+    color: #fff;
+  }
+}
+
+.req {
+  color: #ff4d4d;
+  font-weight: 700;
+  margin-left: 3px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #181818;
+}
+
+.btn-primary {
+  background: #2f6fed;
+  border-color: #2f6fed;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.06);
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.note {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.note-credit {
+  text-align: right;
+  margin-top: -6px;
+}
+
+@media (max-width: 720px) {
+  .modal {
+    padding: 16px;
+  }
+
+  .palette {
+    width: 100%;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+
+  .label-input {
+    min-width: 0;
+    width: 100%;
+  }
 }
