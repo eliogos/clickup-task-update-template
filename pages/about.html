@@ -12,8 +12,61 @@
       </section>
 
       <section class="settings-section">
-        <p class="settings-section-title">About</p>
+        <p class="settings-section-title">Credits</p>
         <div class="note note-credit">{{CREDIT_HTML}} - v{{APP_VERSION}}</div>
+        <p class="field-subtext">Built for Tampermonkey userscript workflow inside ClickUp.</p>
+      </section>
+
+      <section class="settings-section">
+        <p class="settings-section-title">References</p>
+        <ul class="about-ref-list">
+          <li>
+            <a href="https://ant.design/" target="_blank" rel="noopener noreferrer">Ant Design</a>
+            <span>Primary component behavior and visual rhythm reference.</span>
+          </li>
+          <li>
+            <a href="https://ant.design/components/overview/" target="_blank" rel="noopener noreferrer">Ant Design Components Overview</a>
+            <span>Interaction/state references for controls, popups, and forms.</span>
+          </li>
+          <li>
+            <a href="https://www.tampermonkey.net/" target="_blank" rel="noopener noreferrer">Tampermonkey</a>
+            <span>Userscript manager runtime and update lifecycle.</span>
+          </li>
+          <li>
+            <a href="https://fonts.google.com/icons" target="_blank" rel="noopener noreferrer">Material Symbols</a>
+            <span>Icon set used throughout modal actions and navigation.</span>
+          </li>
+          <li>
+            <a href="https://fonts.google.com/" target="_blank" rel="noopener noreferrer">Google Fonts</a>
+            <span>UI and monospace font families in the modal.</span>
+          </li>
+          <li>
+            <a href="https://developer.mozilla.org/" target="_blank" rel="noopener noreferrer">MDN Web Docs</a>
+            <span>Popover and modern CSS/JS behavior references.</span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="settings-section">
+        <p class="settings-section-title">Whats New</p>
+        <p class="field-subtext">Open the latest release notes in the repository.</p>
+        <div class="about-update-actions">
+          <a class="btn" href="https://github.com/eliogos/clickup-task-update-template#whats-new" target="_blank" rel="noopener noreferrer">
+            <span class="material-symbols-outlined" aria-hidden="true">history</span>
+            <span>Open Whats New</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <p class="settings-section-title">Updates</p>
+        <p class="field-subtext">Checks for updates in the repository.</p>
+        <div class="about-update-actions">
+          <button class="btn" id="check-updates" type="button">
+            <span class="material-symbols-outlined" aria-hidden="true">system_update_alt</span>
+            <span>Check Updates</span>
+          </button>
+        </div>
       </section>
     </div>
   </div>
