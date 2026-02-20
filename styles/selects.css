@@ -1,23 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=keyboard_arrow_down");
-
 select.field {
   min-width: 0;
-}
-
-.material-symbols-outlined {
-  font-family: "Material Symbols Outlined", system-ui, sans-serif;
-  font-weight: normal;
-  font-style: normal;
-  font-size: 20px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-smoothing: antialiased;
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 200, "opsz" 48;
 }
 
 .select-wrap {
@@ -37,7 +19,21 @@ select.field {
   right: 10px;
   pointer-events: none;
   color: #93a8da;
+  display: inline-flex;
+  width: 12px;
+  height: 12px;
+  align-items: center;
+  justify-content: center;
   transition: color 140ms ease, transform 140ms ease;
+}
+
+.select-icon::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-1px);
 }
 
 .select-wrap:focus-within .select-icon {
@@ -90,7 +86,9 @@ select.field {
 
 .status-select-wrap {
   --status-accent: #2f6fed;
-  width: fit-content;
+  display: inline-flex;
+  width: 180px;
+  max-width: 100%;
 }
 
 .status-select-wrap[data-status="Not Started"] { --status-accent: #ec407a; }
@@ -103,6 +101,62 @@ select.field {
 }
 
 @supports (appearance: base-select) and selector(select::picker(select)) {
+  .banner-select {
+    appearance: base-select;
+    color: transparent;
+    text-shadow: none;
+  }
+
+  .banner-select::picker-icon {
+    opacity: 0;
+  }
+
+  .banner-select:open + .select-icon {
+    transform: rotate(180deg);
+  }
+
+  .banner-select::picker(select) {
+    appearance: base-select;
+    display: grid;
+    grid-template-columns: repeat(4, 26px);
+    gap: 8px;
+    border: 1px solid #3f4863;
+    border-radius: 10px;
+    padding: 8px;
+    background: #111722;
+    box-shadow:
+      0 20px 40px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    margin-top: 8px;
+    width: max-content;
+    min-width: 0;
+  }
+
+  .banner-select option {
+    appearance: base-select;
+    width: 26px;
+    height: 26px;
+    min-height: 26px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: var(--swatch, #666);
+    color: transparent;
+    font-size: 0;
+    line-height: 0;
+    padding: 0;
+    margin: 0;
+    outline: none;
+  }
+
+  .banner-select option:hover {
+    filter: brightness(1.1);
+  }
+
+  .banner-select option:checked {
+    outline: 2px solid #d7e3ff;
+    outline-offset: 1px;
+  }
+
   .status-select {
     appearance: base-select;
   }

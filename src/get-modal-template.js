@@ -23,7 +23,7 @@
         <div class="select-wrap banner-select-wrap">
           <span class="banner-preview {{DEFAULT_BANNER_COLOR}}" id="banner-preview" aria-hidden="true"></span>
           <select class="field banner-select" id="banner-color" aria-label="Banner color"></select>
-          <span class="material-symbols-outlined select-icon" aria-hidden="true">keyboard_arrow_down</span>
+          <span class="material-symbols-outlined select-icon" aria-hidden="true"></span>
         </div>
       </div>
       <div class="field-stack label-stack">
@@ -48,7 +48,7 @@
           <option>For QA</option>
           <option>Completed</option>
         </select>
-        <span class="material-symbols-outlined select-icon" aria-hidden="true">keyboard_arrow_down</span>
+        <span class="material-symbols-outlined select-icon" aria-hidden="true"></span>
       </div>
     </div>
     <div class="group">
@@ -64,12 +64,16 @@
       <label>Current Focus</label>
       <textarea class="field" id="focus"></textarea>
     </div>
-    <div class="actions">
-      <button class="btn" id="cancel" type="button">Cancel</button>
-      <button class="btn btn-primary" id="insert" type="button" disabled>Insert</button>
+    <div class="footer-row">
+      <div class="note note-credit">{{CREDIT_HTML}} - v{{APP_VERSION}}</div>
+      <div class="footer-right">
+        <div class="note">You can insert Files and Mentions after inserting this template.</div>
+        <div class="actions">
+          <button class="btn" id="cancel" type="button">Cancel</button>
+          <button class="btn btn-primary" id="insert" type="button" disabled>Insert</button>
+        </div>
+      </div>
     </div>
-    <div class="note">You can insert Files and Mentions after inserting this template.</div>
-    <div class="note note-credit">{{CREDIT_HTML}} - v{{APP_VERSION}}</div>
   </section>
 </div>
 `;
