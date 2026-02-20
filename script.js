@@ -5,8 +5,8 @@
 // @description  Insert update template in ClickUp
 // @match        https://app.clickup.com/*
 // @grant        none
-// @updateURL    https://raw.githubusercontent.com/eliogos/YOUR_REPO/main/clickup-update.user.js
-// @downloadURL  https://raw.githubusercontent.com/eliogos/YOUR_REPO/main/clickup-update.user.js
+// @updateURL    https://raw.githubusercontent.com/eliogos/clickup-task-update-template/script.js
+// @downloadURL  https://raw.githubusercontent.com/eliogos/clickup-task-update-template/script.js
 // ==/UserScript==
 
 (function () {
