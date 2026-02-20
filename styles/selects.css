@@ -105,7 +105,7 @@ select.field {
   appearance: base-select;
 
   border: 1px solid #3f4863;
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 5px;
   margin-top: 8px;
 
@@ -119,7 +119,7 @@ select.field {
 /* ================= OPTIONS ================= */
 
 .status-select option {
-  border-radius: 12px;
+  border-radius: 6px;
   background: transparent;
   color: #e9efff;
   padding: 10px 12px;
