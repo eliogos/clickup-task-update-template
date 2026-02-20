@@ -50,10 +50,11 @@ select.field {
 /* ================= STATUS SELECT ================= */
 
 .status-select {
-  appearance: base-select; /* FORCE MODERN SELECT */
+  appearance: base-select;
 
   cursor: pointer;
   border-radius: 10px;
+  height: 2.2rem;
   border: 1px solid #3b4259;
   background: #10131a;
   color: #ecf1ff;
@@ -104,12 +105,12 @@ select.field {
 .status-select::picker(select) {
   appearance: base-select;
 
-  border: 1px solid #3f4863;
+  border: 1px solid #262b3a;
   border-radius: 8px;
   padding: 5px;
   margin-top: 8px;
 
-  background: #0f1522;
+  background: #1a1f29;
 
   box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.5),
