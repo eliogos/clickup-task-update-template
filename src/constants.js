@@ -7,7 +7,7 @@
     global.GM_info.script &&
     global.GM_info.script.version
       ? String(global.GM_info.script.version)
-      : "10.1";
+      : "10.22";
 
   app.constants = {
     APP_VERSION: scriptVersion,
