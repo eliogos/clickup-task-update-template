@@ -2,11 +2,6 @@
   "use strict";
 
   const app = (global.ClickUpUpdateApp = global.ClickUpUpdateApp || {});
-  const constants = app.constants || {};
-  const defaultLabel = constants.defaultLabel || "Design Update";
-  const defaultNumber = constants.defaultNumber || "01";
-  const appVersion = constants.APP_VERSION || "0.0";
-  const creditHtml = constants.creditHtml || "Made with &#x2764;&#xFE0F; by Jai";
 
   function escapeAttr(value) {
     return String(value)
@@ -16,17 +11,78 @@
       .replace(/>/g, "&gt;");
   }
 
+  function getScriptVersionFallback() {
+    return global.GM_info &&
+      global.GM_info.script &&
+      global.GM_info.script.version
+      ? String(global.GM_info.script.version)
+      : "0.0";
+  }
+
+  function replaceToken(source, tokenName, value) {
+    const pattern = new RegExp(`{{\\s*${tokenName}\\s*}}`, "g");
+    return source.replace(pattern, value);
+  }
+
+  function ensureCreditLine(source) {
+    if (/class\s*=\s*["'][^"']*note-credit/.test(source)) return source;
+    return source.replace(
+      /<\/section>/i,
+      '  <div class="note note-credit">{{CREDIT_HTML}} - v{{APP_VERSION}}</div>\n</section>'
+    );
+  }
+
+  function ensureValidationHelpers(source) {
+    let output = source;
+
+    if (!/id\s*=\s*["']num-controls["']/.test(output)) {
+      output = output.replace(
+        /<div\s+class=(["'])num-controls\1([^>]*)>/i,
+        '<div class="num-controls" id="num-controls"$2>'
+      );
+    }
+
+    if (!/id\s*=\s*["']label-error["']/.test(output)) {
+      output = output.replace(
+        /(<input[^>]*id=(["'])label\2[^>]*>)/i,
+        '$1\n      <p class="field-subtext field-subtext-error" id="label-error" hidden>Label is required.</p>'
+      );
+    }
+
+    if (!/id\s*=\s*["']number-error["']/.test(output)) {
+      output = output.replace(
+        /(<\/div>\s*)(?=\s*<\/div>\s*<\/div>\s*<div\s+class=(["'])group\2)/i,
+        '$1\n      <p class="field-subtext field-subtext-error" id="number-error" hidden>Update number is required.</p>\n'
+      );
+    }
+
+    if (!/id\s*=\s*["']acc-error["']/.test(output)) {
+      output = output.replace(
+        /(<textarea[^>]*id=(["'])acc\2[^>]*><\/textarea>)/i,
+        '$1\n    <p class="field-subtext field-subtext-error" id="acc-error" hidden>Accomplishments is required.</p>'
+      );
+    }
+
+    return output;
+  }
+
   function getFallbackTemplate() {
     return `
 <section class="modal" id="modal" popover="auto" role="dialog" aria-modal="true" aria-label="Insert Update Template">
   <p class="title">Insert Update Template</p>
   <div class="row-inline">
     <div class="palette" id="palette" aria-label="Banner color"></div>
-    <input class="field label-input" id="label" value="{{DEFAULT_LABEL}}" />
-    <div class="num-controls" aria-label="Update number">
-      <button class="num-btn" id="dec" type="button">-</button>
-      <input class="num-input" id="number" value="{{DEFAULT_NUMBER}}" inputmode="numeric" />
-      <button class="num-btn" id="inc" type="button">+</button>
+    <div class="field-stack label-stack">
+      <input class="field label-input" id="label" value="{{DEFAULT_LABEL}}" aria-describedby="label-error" />
+      <p class="field-subtext field-subtext-error" id="label-error" hidden>Label is required.</p>
+    </div>
+    <div class="field-stack number-stack">
+      <div class="num-controls" id="num-controls" aria-label="Update number">
+        <button class="num-btn" id="dec" type="button">-</button>
+        <input class="num-input" id="number" value="{{DEFAULT_NUMBER}}" inputmode="numeric" aria-describedby="number-error" />
+        <button class="num-btn" id="inc" type="button">+</button>
+      </div>
+      <p class="field-subtext field-subtext-error" id="number-error" hidden>Update number is required.</p>
     </div>
   </div>
   <div class="group">
@@ -40,7 +96,8 @@
   </div>
   <div class="group">
     <label>Accomplishments<span class="req">*</span></label>
-    <textarea class="field" id="acc"></textarea>
+    <textarea class="field" id="acc" aria-describedby="acc-error"></textarea>
+    <p class="field-subtext field-subtext-error" id="acc-error" hidden>Accomplishments is required.</p>
   </div>
   <div class="group">
     <label>Blockers</label>
@@ -61,16 +118,36 @@
   }
 
   app.createModalMarkup = function createModalMarkup() {
+    const constants = app.constants || {};
+    const defaultLabel = constants.defaultLabel || "Design Update";
+    const defaultNumber = constants.defaultNumber || "01";
+    const appVersion =
+      constants.APP_VERSION ||
+      constants.appVersion ||
+      constants.version ||
+      getScriptVersionFallback();
+    const creditHtml =
+      constants.creditHtml ||
+      constants.creditHTML ||
+      constants.credit ||
+      "Made with &#x2764;&#xFE0F; by Jai";
+
     const template =
       typeof app.getModalTemplate === "function"
         ? app.getModalTemplate()
         : getFallbackTemplate();
-    const source = template || getFallbackTemplate();
+    const source = ensureValidationHelpers(ensureCreditLine(template || getFallbackTemplate()));
 
-    return source
-      .replaceAll("{{DEFAULT_LABEL}}", escapeAttr(defaultLabel))
-      .replaceAll("{{DEFAULT_NUMBER}}", escapeAttr(defaultNumber))
-      .replaceAll("{{APP_VERSION}}", escapeAttr(appVersion))
-      .replaceAll("{{CREDIT_HTML}}", creditHtml);
+    let output = source;
+    output = replaceToken(output, "DEFAULT_LABEL", escapeAttr(defaultLabel));
+    output = replaceToken(output, "DEFAULT_NUMBER", escapeAttr(defaultNumber));
+    output = replaceToken(output, "APP_VERSION", escapeAttr(appVersion));
+    output = replaceToken(output, "appVersion", escapeAttr(appVersion));
+    output = replaceToken(output, "VERSION", escapeAttr(appVersion));
+    output = replaceToken(output, "CREDIT_HTML", creditHtml);
+    output = replaceToken(output, "creditHtml", creditHtml);
+    output = replaceToken(output, "CREDIT", creditHtml);
+
+    return output;
   };
 })(globalThis);

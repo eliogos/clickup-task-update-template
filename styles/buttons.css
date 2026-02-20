@@ -1,0 +1,83 @@
+.num-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.num-btn:hover {
+  background: #181818;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #181818;
+}
+
+.btn-primary {
+  background: #2f6fed;
+  border-color: #2f6fed;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.06);
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.btn[data-tooltip] {
+  position: relative;
+}
+
+.btn[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 2;
+  white-space: nowrap;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #3b3b3b;
+  background: #0f1115;
+  color: #f5f7fb;
+  font-size: 11px;
+  line-height: 1.2;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.btn[data-tooltip]:hover::before {
+  content: "";
+  position: absolute;
+  right: 12px;
+  bottom: calc(100% + 4px);
+  z-index: 2;
+  border-width: 6px 6px 0 6px;
+  border-style: solid;
+  border-color: #0f1115 transparent transparent transparent;
+}

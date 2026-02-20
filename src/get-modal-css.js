@@ -2,10 +2,20 @@
   "use strict";
 
   const app = (global.ClickUpUpdateApp = global.ClickUpUpdateApp || {});
+  const RESOURCE_NAMES = ["modalCss", "modalInputsCss", "modalSelectsCss", "modalButtonsCss"];
+
+  function getResourceTextSafe(name) {
+    try {
+      return GM_getResourceText(name) || "";
+    } catch {
+      return "";
+    }
+  }
 
   app.getModalCss = function getModalCss() {
     if (typeof GM_getResourceText === "function") {
-      return GM_getResourceText("modalCss");
+      const cssParts = RESOURCE_NAMES.map(getResourceTextSafe).filter(Boolean);
+      if (cssParts.length > 0) return cssParts.join("\n");
     }
 
     // Fallback only for managers that do not expose GM_getResourceText.
@@ -37,7 +47,39 @@
         padding: 8px 10px;
         border-radius: 10px;
       }
+      .num-controls {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid #333;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .num-input {
+        width: 56px;
+        text-align: center;
+        border: none;
+        background: transparent;
+        color: #fff;
+      }
+      .num-btn {
+        width: 34px;
+        height: 34px;
+        border: none;
+        background: #111;
+        color: #fff;
+      }
+      select.field { min-width: 180px; }
+      .status-select { min-width: 180px; }
       .actions { display: flex; justify-content: flex-end; gap: 10px; }
+      .btn {
+        height: 34px;
+        padding: 0 12px;
+        border-radius: 10px;
+        border: 1px solid #333;
+        background: #111;
+        color: #fff;
+      }
+      .btn-primary { background: #2f6fed; border-color: #2f6fed; }
     `;
   };
 })(globalThis);

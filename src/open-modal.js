@@ -47,7 +47,11 @@
     const paletteEl = byId("palette");
     const labelInput = byId("label");
     const numberInput = byId("number");
+    const numControls = byId("num-controls");
     const accInput = byId("acc");
+    const labelError = byId("label-error");
+    const numberError = byId("number-error");
+    const accError = byId("acc-error");
     const insertBtn = byId("insert");
     const incBtn = byId("inc");
     const decBtn = byId("dec");
@@ -66,7 +70,6 @@
     }
 
     const allColors = constants.allColors || [];
-    const bannerPalette = constants.bannerPalette || {};
     const isPopoverOpen = app.isPopoverOpen || (() => false);
     const buildHTML = app.buildHTML;
     const simulatePaste = app.simulatePaste;
@@ -123,10 +126,9 @@
       allColors.forEach((name) => {
         const sw = document.createElement("button");
         sw.type = "button";
-        sw.className = `swatch${name === selected ? " selected" : ""}`;
+        sw.className = `swatch ${name}${name === selected ? " selected" : ""}`;
         sw.title = name;
         sw.setAttribute("aria-label", name);
-        sw.style.background = bannerPalette[name] || "#999";
         sw.onclick = () => {
           selected = name;
           renderPalette();
@@ -136,9 +138,42 @@
       });
     };
 
+    const setFieldError = (inputEl, helperEl, isInvalid, message, wrapperEl) => {
+      if (inputEl) {
+        inputEl.classList.toggle("input-error", isInvalid);
+        inputEl.setAttribute("aria-invalid", isInvalid ? "true" : "false");
+      }
+
+      if (wrapperEl) {
+        wrapperEl.classList.toggle("input-error", isInvalid);
+      }
+
+      if (helperEl) {
+        helperEl.hidden = !isInvalid;
+        if (isInvalid && message) helperEl.textContent = message;
+      }
+    };
+
     const validate = () => {
-      const ok = !!labelInput.value.trim() && !!accInput.value.trim() && !!numberInput.value.trim();
+      const labelInvalid = !labelInput.value.trim();
+      const numberInvalid = !numberInput.value.trim();
+      const accInvalid = !accInput.value.trim();
+
+      setFieldError(labelInput, labelError, labelInvalid, "Label is required.");
+      setFieldError(numberInput, numberError, numberInvalid, "Update number is required.", numControls);
+      setFieldError(accInput, accError, accInvalid, "Accomplishments is required.");
+
+      const ok = !(labelInvalid || accInvalid || numberInvalid);
       insertBtn.disabled = !ok;
+
+      if (!ok) {
+        const tip = "Please fill in required fields";
+        insertBtn.dataset.tooltip = tip;
+        insertBtn.setAttribute("title", tip);
+      } else {
+        delete insertBtn.dataset.tooltip;
+        insertBtn.removeAttribute("title");
+      }
     };
 
     renderPalette();

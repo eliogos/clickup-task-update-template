@@ -1,0 +1,84 @@
+select.field {
+  min-width: 180px;
+}
+
+.status-select {
+  cursor: pointer;
+  border-color: #3b4259;
+  background:
+    linear-gradient(180deg, rgba(37, 46, 69, 0.35), rgba(17, 19, 24, 0.4)),
+    #10131a;
+  color: #ecf1ff;
+}
+
+.status-select:focus {
+  border-color: #6f91ff;
+}
+
+@supports not ((appearance: base-select) and selector(select::picker(select))) {
+  .status-select {
+    appearance: none;
+    padding-right: 34px;
+    background-image:
+      linear-gradient(45deg, transparent 50%, #95aeff 50%),
+      linear-gradient(135deg, #95aeff 50%, transparent 50%),
+      linear-gradient(180deg, rgba(37, 46, 69, 0.35), rgba(17, 19, 24, 0.4));
+    background-position:
+      calc(100% - 16px) calc(50% + 1px),
+      calc(100% - 11px) calc(50% + 1px),
+      0 0;
+    background-size:
+      5px 5px,
+      5px 5px,
+      100% 100%;
+    background-repeat: no-repeat;
+  }
+}
+
+@supports (appearance: base-select) and selector(select::picker(select)) {
+  .status-select {
+    appearance: base-select;
+    padding-right: 34px;
+  }
+
+  .status-select::picker-icon {
+    color: #9ab8ff;
+    transition: transform 150ms ease, color 150ms ease;
+  }
+
+  .status-select:open::picker-icon {
+    transform: rotate(180deg);
+    color: #c6d4ff;
+  }
+
+  .status-select::picker(select) {
+    appearance: base-select;
+    border: 1px solid #43507a;
+    border-radius: 14px;
+    padding: 6px;
+    background:
+      radial-gradient(120% 100% at 50% 0%, rgba(107, 140, 255, 0.18), rgba(0, 0, 0, 0) 45%),
+      #121827;
+    box-shadow:
+      0 20px 40px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    margin-top: 8px;
+  }
+
+  .status-select option {
+    border-radius: 10px;
+    background: transparent;
+    color: #e9efff;
+    padding: 9px 11px;
+    margin: 2px 0;
+  }
+
+  .status-select option:hover {
+    background: rgba(114, 146, 255, 0.18);
+  }
+
+  .status-select option:checked {
+    background: #2f6fed;
+    color: #fff;
+  }
+}
