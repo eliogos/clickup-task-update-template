@@ -56,22 +56,33 @@ select.field {
   border-radius: 10px;
   height: 2.2rem;
   border: 1px solid #3b4259;
-  background: #10131a;
+  background: linear-gradient(180deg, #111726 0%, #0f1420 100%);
   color: #ecf1ff;
   min-width: 180px;
   font-size: 13px;
   font-weight: 600;
+  transform-origin: center top;
 
   --status-accent: #2f6fed;
   --status-accent-rgb: 47, 111, 237;
 
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    filter 220ms ease;
 }
 
 .status-select:hover,
 .status-select:focus {
   border-color: var(--status-accent);
   box-shadow: 0 0 0 2px rgba(var(--status-accent-rgb), 0.22);
+  transform: translateY(-1px);
+}
+
+.status-select:open {
+  animation: status-trigger-bounce 520ms cubic-bezier(0.17, 0.84, 0.24, 1);
+  filter: saturate(1.12) brightness(1.04);
 }
 
 /* Accent Variants */
@@ -98,6 +109,7 @@ select.field {
 /* Rotate arrow when open */
 .status-select:open + .select-icon {
   transform: rotate(180deg);
+  animation: status-icon-pop 360ms cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
 /* ================= PICKER PANEL ================= */
@@ -111,6 +123,8 @@ select.field {
   margin-top: 8px;
 
   background: #1a1f29;
+  transform-origin: top center;
+  animation: status-picker-pop 440ms cubic-bezier(0.19, 0.96, 0.19, 1);
 
   box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.5),
@@ -129,6 +143,17 @@ select.field {
   font-weight: 600;
   transition: background-color 120ms ease, outline-color 120ms ease;
 }
+
+.status-select:open option {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.97);
+  animation: status-option-enter 260ms cubic-bezier(0.2, 0.92, 0.24, 1) forwards;
+}
+
+.status-select:open option:nth-child(1) { animation-delay: 35ms; }
+.status-select:open option:nth-child(2) { animation-delay: 70ms; }
+.status-select:open option:nth-child(3) { animation-delay: 105ms; }
+.status-select:open option:nth-child(4) { animation-delay: 140ms; }
 
 /* Hover colors */
 .status-select option:nth-child(1):hover { background: rgba(236, 64, 122, 0.22); }
@@ -159,4 +184,56 @@ select.field {
   background: rgba(67, 160, 71, 0.32);
   outline: 2px solid rgba(67, 160, 71, 0.62);
   color: #fff;
+}
+
+@keyframes status-trigger-bounce {
+  0% { transform: translateY(0) scale(1); }
+  38% { transform: translateY(-1px) scale(1.04, 0.97); }
+  66% { transform: translateY(0) scale(0.985, 1.02); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes status-picker-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.9);
+    filter: saturate(0.86);
+  }
+  62% {
+    opacity: 1;
+    transform: translateY(2px) scale(1.03);
+    filter: saturate(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: saturate(1);
+  }
+}
+
+@keyframes status-icon-pop {
+  0% { transform: rotate(0deg) scale(1); }
+  55% { transform: rotate(200deg) scale(1.2); }
+  100% { transform: rotate(180deg) scale(1); }
+}
+
+@keyframes status-option-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-select,
+  .status-select::picker(select),
+  .status-select option,
+  .status-select:open + .select-icon {
+    animation: none !important;
+    transition: none !important;
+  }
 }

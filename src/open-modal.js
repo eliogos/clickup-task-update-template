@@ -3,8 +3,33 @@
 
   const app = (global.ClickUpUpdateApp = global.ClickUpUpdateApp || {});
   const constants = app.constants || {};
+  const FONT_STYLESHEET_HREF =
+    "https://fonts.googleapis.com/css2?family=Darumadrop+One&family=Geist+Mono:wght@100..900&family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=National+Park:wght@200..800&family=VT323&display=swap";
 
   let modalCssCache = null;
+
+  function ensureFontLinks() {
+    if (document.head.querySelector('link[data-clickup-update-fonts="styles"]')) return;
+
+    const preconnectGoogleApis = document.createElement("link");
+    preconnectGoogleApis.rel = "preconnect";
+    preconnectGoogleApis.href = "https://fonts.googleapis.com";
+    preconnectGoogleApis.setAttribute("data-clickup-update-fonts", "preconnect-googleapis");
+    document.head.appendChild(preconnectGoogleApis);
+
+    const preconnectGstatic = document.createElement("link");
+    preconnectGstatic.rel = "preconnect";
+    preconnectGstatic.href = "https://fonts.gstatic.com";
+    preconnectGstatic.crossOrigin = "anonymous";
+    preconnectGstatic.setAttribute("data-clickup-update-fonts", "preconnect-gstatic");
+    document.head.appendChild(preconnectGstatic);
+
+    const stylesheet = document.createElement("link");
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = FONT_STYLESHEET_HREF;
+    stylesheet.setAttribute("data-clickup-update-fonts", "styles");
+    document.head.appendChild(stylesheet);
+  }
 
   function getModalCssText() {
     if (modalCssCache) return modalCssCache;
@@ -36,6 +61,8 @@
     if (!editor || typeof editor !== "object") return;
     if (typeof app.createModalMarkup !== "function") return;
 
+    ensureFontLinks();
+
     const host = document.createElement("div");
     document.body.appendChild(host);
 
@@ -49,6 +76,7 @@
     const bannerPopover = byId("banner-popover");
     const labelInput = byId("label");
     const labelChips = Array.from(shadow.querySelectorAll(".label-chip"));
+    const labelChipRow = shadow.querySelector(".label-chip-row");
     const numberInput = byId("number");
     const numControls = byId("num-controls");
     const appendNumberInput = byId("append-number");
@@ -87,6 +115,7 @@
     let selected = defaultBannerColor;
     let closed = false;
     let close = () => {};
+    let chipResizeObserver = null;
 
     const cleanup = () => {
       if (closed) return;
@@ -99,6 +128,10 @@
       document.removeEventListener("keydown", stopKeys, true);
       document.removeEventListener("keyup", stopKeys, true);
       document.removeEventListener("keypress", stopKeys, true);
+      if (chipResizeObserver) {
+        chipResizeObserver.disconnect();
+        chipResizeObserver = null;
+      }
       host.remove();
     };
 
@@ -256,6 +289,19 @@
       });
     };
 
+    const syncLabelChipOverflowState = () => {
+      if (!labelChipRow) return;
+      const maxScroll = Math.max(0, labelChipRow.scrollWidth - labelChipRow.clientWidth);
+      const current = Math.max(0, labelChipRow.scrollLeft);
+      const hasOverflow = maxScroll > 1;
+      const atStart = !hasOverflow || current <= 1;
+      const atEnd = !hasOverflow || current >= maxScroll - 1;
+
+      labelChipRow.classList.toggle("has-overflow", hasOverflow);
+      labelChipRow.classList.toggle("at-start", atStart);
+      labelChipRow.classList.toggle("at-end", atEnd);
+    };
+
     selected = allColors.includes(defaultBannerColor) ? defaultBannerColor : allColors[0];
     renderPalette();
 
@@ -323,12 +369,30 @@
         syncLabelChipState();
       });
     });
+
+    if (labelChipRow) {
+      labelChipRow.addEventListener("scroll", syncLabelChipOverflowState, { passive: true });
+      labelChipRow.addEventListener("wheel", (event) => {
+        if (labelChipRow.scrollWidth <= labelChipRow.clientWidth) return;
+        if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+        event.preventDefault();
+        labelChipRow.scrollLeft += event.deltaY;
+        syncLabelChipOverflowState();
+      }, { passive: false });
+
+      if (typeof ResizeObserver === "function") {
+        chipResizeObserver = new ResizeObserver(syncLabelChipOverflowState);
+        chipResizeObserver.observe(labelChipRow);
+      }
+    }
+
     accInput.addEventListener("input", validate);
     statusInput.addEventListener("change", applyStatusAccent);
 
     applyStatusAccent();
     syncLabelChipState();
     syncNumberVisibility();
+    syncLabelChipOverflowState();
 
     if (addNotesBtn && notesGroup && notesInput) {
       const setNotesState = (isVisible) => {
@@ -349,6 +413,12 @@
       });
     }
     cancelBtn.onclick = close;
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        close();
+      }
+    });
 
     insertBtn.onclick = () => {
       if (typeof buildHTML !== "function" || typeof simulatePaste !== "function") return;

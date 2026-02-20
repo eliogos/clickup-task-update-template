@@ -1,13 +1,17 @@
 :host {
   all: initial;
   color-scheme: dark;
+  --font-ui: "Inter", "Google Sans", system-ui, -apple-system, Segoe UI, sans-serif;
+  --scroll-track: #0e131f;
+  --scroll-thumb-a: #5f7fe5;
+  --scroll-thumb-b: #8ea9ff;
 }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-ui);
 }
 
 .modal {
@@ -45,6 +49,28 @@
   transform: translateY(10px) scale(0.98);
   opacity: 0;
   will-change: transform, opacity;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb-a) var(--scroll-track);
+}
+
+.modal-card::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.modal-card::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+  border-radius: 999px;
+}
+
+.modal-card::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--scroll-thumb-a) 0%, var(--scroll-thumb-b) 100%);
+  border: 2px solid var(--scroll-track);
+  border-radius: 999px;
+}
+
+.modal-card::-webkit-scrollbar-thumb:hover {
+  filter: brightness(1.06);
 }
 
 .modal:popover-open,
