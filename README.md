@@ -7,7 +7,7 @@ Userscript that opens a modal in ClickUp using a configurable trigger, then inse
 ### 14.3.1 (2026-02-20)
 - Fixed settings switch scroll jumps by anchoring the current section during updates.
 - Added pill styling for tooltip values/shortcuts and added lo-fi volume value to tooltip.
-- Added a `Whats New` button in the About page linking to the README.
+- Added a `Version History` button in the About page linking to the README.
 - Bumped script version to `14.3.1`.
 
 ### 14.3.0 (2026-02-20)
