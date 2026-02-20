@@ -14,6 +14,11 @@
   background: #181818;
 }
 
+.num-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;
@@ -48,6 +53,21 @@
   opacity: 0.45;
   cursor: not-allowed;
   filter: none;
+}
+
+.btn-optional {
+  border-style: dashed;
+  color: #d4e1ff;
+}
+
+.btn-optional:hover {
+  background: #18233a;
+  border-color: #5c78b8;
+}
+
+.btn-optional:disabled {
+  opacity: 0.65;
+  cursor: default;
 }
 
 .btn[data-tooltip] {

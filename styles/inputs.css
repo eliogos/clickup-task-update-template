@@ -109,6 +109,10 @@
   display: none;
 }
 
+.num-controls.is-disabled {
+  opacity: 0.55;
+}
+
 .num-input {
   width: 56px;
   height: 34px;
@@ -135,6 +139,10 @@
   height: 14px;
   margin: 0;
   accent-color: #4b84ff;
+}
+
+.optional-add-wrap {
+  margin-top: -2px;
 }
 
 textarea.field {

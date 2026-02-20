@@ -18,6 +18,10 @@
       return html;
     }
 
+    function emptySection(title) {
+      return `<blockquote><strong>${title}:</strong></blockquote><blockquote><br/></blockquote><br/>`;
+    }
+
     const labelText = String(data.label || "").trim();
     const numberText = String(data.number || "").trim();
     const headingText = data.appendNumberSuffix === false
@@ -26,12 +30,16 @@
 
     let html =
       `<h2 data-advanced-banner="${crypto.randomUUID()}" data-advanced-banner-color="${data.bannerColor || defaultBannerColor}"><strong>${headingText}</strong></h2>` +
+      `<br/>` +
       `<p><strong>Status:</strong> <span class="ql-badge ql-badge-${statusColor[data.status]}">${data.status}</span></p>` +
       "<br/>";
 
     html += blockSection("Accomplishments", "\u{1F3C6}", data.accomplishments, true);
     html += blockSection("Blockers", "\u{1F6A7}", data.blockers, false);
     html += blockSection("Current Focus", "\u{1F3AF}", data.focus, false);
+    html += blockSection("Notes", "\u{1F4DD}", data.notes, false);
+    html += emptySection("Files");
+    html += emptySection("Mentions");
 
     return html;
   };

@@ -64,6 +64,9 @@
     const statusSelectWrap = statusInput ? statusInput.closest(".status-select-wrap") : null;
     const blockInput = byId("block");
     const focusInput = byId("focus");
+    const addNotesBtn = byId("add-notes");
+    const notesGroup = byId("notes-group");
+    const notesInput = byId("notes");
 
     if (
       !modal || !labelInput || !numberInput || !accInput ||
@@ -234,7 +237,7 @@
 
     const syncNumberVisibility = () => {
       const shouldAppendNumber = appendNumberInput ? appendNumberInput.checked : true;
-      numControls.hidden = !shouldAppendNumber;
+      numControls.classList.toggle("is-disabled", !shouldAppendNumber);
 
       numberInput.disabled = !shouldAppendNumber;
       incBtn.disabled = !shouldAppendNumber;
@@ -327,6 +330,22 @@
     syncLabelChipState();
     syncNumberVisibility();
 
+    if (addNotesBtn && notesGroup && notesInput) {
+      addNotesBtn.setAttribute("aria-expanded", notesGroup.hidden ? "false" : "true");
+      if (!notesGroup.hidden) {
+        addNotesBtn.disabled = true;
+        addNotesBtn.textContent = "📝 Notes Added";
+      }
+
+      addNotesBtn.addEventListener("click", () => {
+        notesGroup.hidden = false;
+        addNotesBtn.disabled = true;
+        addNotesBtn.textContent = "📝 Notes Added";
+        addNotesBtn.setAttribute("aria-expanded", "true");
+        notesInput.focus();
+      });
+    }
+
     cancelBtn.onclick = close;
 
     insertBtn.onclick = () => {
@@ -340,6 +359,7 @@
         accomplishments: splitLines(accInput.value),
         blockers: splitLines(blockInput.value),
         focus: splitLines(focusInput.value),
+        notes: notesInput ? splitLines(notesInput.value) : [],
         bannerColor: selected
       };
 

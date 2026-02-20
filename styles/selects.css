@@ -105,8 +105,8 @@ select.field {
   appearance: base-select;
 
   border: 1px solid #3f4863;
-  border-radius: 16px;
-  padding: 10px;
+  border-radius: 10px;
+  padding: 5px;
   margin-top: 8px;
 
   background: #0f1522;
