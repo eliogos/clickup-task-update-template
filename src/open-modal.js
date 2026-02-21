@@ -38,12 +38,12 @@
     Object.freeze({
       id: "radioboss-c22",
       label: "RadioBoss - c22/autodj",
-      url: "http://c22.radioboss.fm:8808/autodj"
+      url: "https://c22.radioboss.fm:8808/autodj"
     }),
     Object.freeze({
       id: "live-streams-mscp3",
       label: "Live Streams NL - mscp3",
-      url: "http://mscp3.live-streams.nl:8020/radio"
+      url: "https://mscp3.live-streams.nl:8020/radio"
     }),
     Object.freeze({
       id: "radiomerge-uk7",
@@ -299,12 +299,19 @@
 
   function normalizeRadioStationUrl(value, fallback = DEFAULT_RADIO_STATION_URL) {
     const fallbackUrl = String(fallback || DEFAULT_RADIO_STATION_URL).trim() || DEFAULT_RADIO_STATION_URL;
-    const raw = String(value == null ? "" : value).trim();
-    if (!raw) return fallbackUrl;
+    const canonicalizeRadioUrl = (url) => {
+      const rawUrl = String(url == null ? "" : url).trim();
+      if (rawUrl === "http://c22.radioboss.fm:8808/autodj") return "https://c22.radioboss.fm:8808/autodj";
+      if (rawUrl === "http://mscp3.live-streams.nl:8020/radio") return "https://mscp3.live-streams.nl:8020/radio";
+      return rawUrl;
+    };
+    const canonicalFallback = canonicalizeRadioUrl(fallbackUrl) || fallbackUrl;
+    const raw = canonicalizeRadioUrl(value);
+    if (!raw) return canonicalFallback;
     const normalized = raw.toLowerCase();
-    if (!RADIO_STATION_URLS.has(normalized)) return fallbackUrl;
+    if (!RADIO_STATION_URLS.has(normalized)) return canonicalFallback;
     const match = RADIO_STATION_OPTIONS.find((station) => String(station.url || "").trim().toLowerCase() === normalized);
-    return match ? match.url : fallbackUrl;
+    return match ? match.url : canonicalFallback;
   }
 
   function getRadioStationByUrl(url) {
@@ -1306,7 +1313,10 @@
       if (sourceInitPromise) return await sourceInitPromise;
       sourceInitPromise = (async () => {
         const targetUrl = currentStreamUrl;
-        const ok = await streamViaFetch(targetUrl) || await streamViaGm(targetUrl);
+        const isHttpTarget = /^http:\/\//i.test(targetUrl);
+        const ok = isHttpTarget
+          ? await streamViaGm(targetUrl)
+          : await streamViaGm(targetUrl) || await streamViaFetch(targetUrl);
         if (targetUrl !== currentStreamUrl) {
           sourceReady = false;
           sourceInitPromise = null;
@@ -1483,7 +1493,9 @@
     };
 
     const setStreamUrl = (url, { restartPlayback = true } = {}) => {
-      const nextUrl = String(url || "").trim();
+      let nextUrl = String(url || "").trim();
+      if (nextUrl === "http://c22.radioboss.fm:8808/autodj") nextUrl = "https://c22.radioboss.fm:8808/autodj";
+      if (nextUrl === "http://mscp3.live-streams.nl:8020/radio") nextUrl = "https://mscp3.live-streams.nl:8020/radio";
       if (!nextUrl) return false;
       if (nextUrl === currentStreamUrl) return true;
       const wasPlaying = state.playing;
@@ -1991,8 +2003,8 @@
                       <option value="https://stream-148.zeno.fm/60cb36c29heuv">Zeno - 60cb36c29heuv</option>
                       <option value="https://stream-142.zeno.fm/sh37pvfd938uv">Zeno - sh37pvfd938uv</option>
                       <option value="https://ec6.yesstreaming.net:1455/stream">Yesstreaming - ec6:1455</option>
-                      <option value="http://c22.radioboss.fm:8808/autodj">RadioBoss - c22/autodj</option>
-                      <option value="http://mscp3.live-streams.nl:8020/radio">Live Streams NL - mscp3</option>
+                      <option value="https://c22.radioboss.fm:8808/autodj">RadioBoss - c22/autodj</option>
+                      <option value="https://mscp3.live-streams.nl:8020/radio">Live Streams NL - mscp3</option>
                       <option value="https://uk7.internet-radio.com/proxy/radiomerge?mp=/stream;">RadioMerge - UK7</option>
                       <option value="https://magic.radioca.st/stream/1/">Magic RadioCast</option>
                       <option value="https://stream-142.zeno.fm/sfaqs2c29heuv">Star FM - Zamboanga</option>
@@ -3805,6 +3817,9 @@
 
     const stopKeys = (e) => {
       if (!isPopoverOpen(modal)) return;
+      const preventDefaultIfCancelable = () => {
+        if (e && e.cancelable) e.preventDefault();
+      };
       e.stopPropagation();
       const focused = shadow.activeElement || document.activeElement;
       const focusIsText = isTextEditingElement(focused);
@@ -3817,7 +3832,7 @@
           e.stopPropagation();
           showTriggerSlashError();
           syncActivePageHeight();
-          e.preventDefault();
+          preventDefaultIfCancelable();
           return;
         }
       }
@@ -3826,16 +3841,16 @@
         clearPendingSpaceShortcut();
         e.stopPropagation();
         if (draftsReplaceConfirmBackdrop && !draftsReplaceConfirmBackdrop.hidden) {
-          e.preventDefault();
+          preventDefaultIfCancelable();
           closeDraftReplaceConfirm();
           return;
         }
         if (draftsConfirmBackdrop && !draftsConfirmBackdrop.hidden) {
-          e.preventDefault();
+          preventDefaultIfCancelable();
           closeDraftDeleteConfirm();
           return;
         }
-        e.preventDefault();
+        preventDefaultIfCancelable();
         close();
         return;
       }
@@ -3844,7 +3859,7 @@
         if (e.type !== "keydown") return;
         if (focusIsText) return;
         e.stopPropagation();
-        e.preventDefault();
+        preventDefaultIfCancelable();
         commitModalSettings({ sidebarCollapsed: !settingsState.sidebarCollapsed });
         return;
       }
@@ -3854,7 +3869,7 @@
         if (focusIsText) return;
         if (e.repeat) return;
         e.stopPropagation();
-        e.preventDefault();
+        preventDefaultIfCancelable();
         const now = Date.now();
         const isFastDoubleSpace = pendingSpaceShortcutAt > 0
           && (now - pendingSpaceShortcutAt) <= SPACE_DOUBLE_TAP_WINDOW_MS;
@@ -3871,7 +3886,7 @@
         if (e.type !== "keydown") return;
         if (focusIsText) return;
         e.stopPropagation();
-        e.preventDefault();
+        preventDefaultIfCancelable();
         cycleThemeFromShortcut();
         return;
       }
@@ -3880,7 +3895,7 @@
         if (e.type !== "keydown") return;
         if (focusIsText) return;
         e.stopPropagation();
-        e.preventDefault();
+        preventDefaultIfCancelable();
         cycleDensityFromShortcut();
         return;
       }
@@ -3889,7 +3904,7 @@
         if (e.type !== "keydown") return;
         if (focusIsText) return;
         e.stopPropagation();
-        e.preventDefault();
+        preventDefaultIfCancelable();
         togglePhysicsFromShortcut();
         return;
       }
@@ -3897,7 +3912,7 @@
       if ((e.key === "m" || e.key === "M" || e.code === "KeyM") && e.ctrlKey && !e.altKey && !e.metaKey) {
         if (e.type !== "keydown") return;
         e.stopPropagation();
-        e.preventDefault();
+        preventDefaultIfCancelable();
         toggleLofiMuteFromShortcut();
       }
 
