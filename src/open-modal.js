@@ -3279,6 +3279,11 @@
     let radioLastValidationPingMs = null;
     let radioLastValidationMethod = "";
     let radioLastValidationAt = 0;
+    const RADIO_PRELOAD_NEIGHBOR_COUNT = 3;
+    const RADIO_PRELOAD_VALIDATION_TIMEOUT_MS = 1500;
+    const RADIO_VALIDATION_CACHE_TTL_MS = 60000;
+    const radioValidationCache = new Map();
+    const radioPreloadInFlight = new Map();
     const ambientTrackState = new Map();
     let ambientUnlockPending = false;
     let ambientUnlockHandler = null;
@@ -3805,6 +3810,8 @@
       radioLastValidationPingMs = null;
       radioLastValidationMethod = "";
       radioLastValidationAt = 0;
+      radioValidationCache.clear();
+      radioPreloadInFlight.clear();
       clearPendingSpaceShortcut();
       detachAmbientUnlockListeners();
       if (uiSfxAudioContext && uiSfxAudioContext.state !== "closed") {
@@ -5992,6 +5999,33 @@
       method: String(method || "").trim().toLowerCase()
     });
 
+    const getRadioValidationCacheKey = (url) => String(url || "").trim().toLowerCase();
+
+    const readRadioValidationCache = (url, { maxAgeMs = RADIO_VALIDATION_CACHE_TTL_MS } = {}) => {
+      const key = getRadioValidationCacheKey(url);
+      if (!key) return null;
+      const entry = radioValidationCache.get(key);
+      if (!entry || typeof entry !== "object") return null;
+      const checkedAt = Number(entry.checkedAt);
+      const ageMs = Date.now() - (Number.isFinite(checkedAt) ? checkedAt : 0);
+      if (ageMs < 0 || ageMs > Math.max(0, Number(maxAgeMs) || 0)) {
+        radioValidationCache.delete(key);
+        return null;
+      }
+      return entry;
+    };
+
+    const writeRadioValidationCache = (url, validation) => {
+      const key = getRadioValidationCacheKey(url);
+      if (!key || !validation || typeof validation !== "object") return;
+      radioValidationCache.set(key, {
+        ok: validation.ok === true,
+        pingMs: Number.isFinite(validation.pingMs) ? Number(validation.pingMs) : null,
+        method: String(validation.method || "").trim().toLowerCase(),
+        checkedAt: Date.now()
+      });
+    };
+
     const validateAudioStreamUrl = async (url, { timeoutMs = 2600 } = {}) => {
       const targetUrl = String(url || "").trim();
       if (!isAllowedAudioStreamUrl(targetUrl)) {
@@ -6074,6 +6108,47 @@
       }
     };
 
+    const preloadNeighborRadioStations = (centerStationUrl) => {
+      const stations = RADIO_STATION_OPTIONS_SORTED.length ? RADIO_STATION_OPTIONS_SORTED : RADIO_STATION_OPTIONS;
+      if (!Array.isArray(stations) || stations.length <= 1) return;
+      const normalizedCenterUrl = normalizeRadioStationUrl(centerStationUrl, settingsState.radioStationUrl).toLowerCase();
+      const centerIndex = stations.findIndex(
+        (station) => String(station && station.url || "").trim().toLowerCase() === normalizedCenterUrl
+      );
+      if (centerIndex < 0) return;
+      const total = stations.length;
+      const seen = new Set();
+      for (let offset = 1; offset <= RADIO_PRELOAD_NEIGHBOR_COUNT; offset += 1) {
+        const prev = stations[(centerIndex - offset + total) % total];
+        const next = stations[(centerIndex + offset) % total];
+        if (prev && prev.url) seen.add(String(prev.url));
+        if (next && next.url) seen.add(String(next.url));
+      }
+      seen.forEach((candidateUrl) => {
+        const normalizedCandidate = normalizeRadioStationUrl(candidateUrl, centerStationUrl);
+        const cacheKey = getRadioValidationCacheKey(normalizedCandidate);
+        if (!cacheKey) return;
+        if (readRadioValidationCache(normalizedCandidate, { maxAgeMs: RADIO_VALIDATION_CACHE_TTL_MS })) return;
+        if (radioPreloadInFlight.has(cacheKey)) return;
+        const task = (async () => {
+          try {
+            const validation = await validateAudioStreamUrl(normalizedCandidate, {
+              timeoutMs: RADIO_PRELOAD_VALIDATION_TIMEOUT_MS
+            });
+            writeRadioValidationCache(normalizedCandidate, validation);
+          } catch {
+            // Best effort neighbor preload.
+          }
+        })();
+        radioPreloadInFlight.set(cacheKey, task);
+        task.finally(() => {
+          if (radioPreloadInFlight.get(cacheKey) === task) {
+            radioPreloadInFlight.delete(cacheKey);
+          }
+        });
+      });
+    };
+
     const applyAudioStreamSelection = async ({ source, stationUrl } = {}) => {
       const normalizedSource = AUDIO_STREAM_SOURCE_OPTIONS.has(String(source || "").trim().toLowerCase())
         ? String(source).trim().toLowerCase()
@@ -6115,7 +6190,9 @@
         const token = ++radioStationValidationToken;
         radioStationApplyPending = true;
         applyModalSettings();
-        const validation = await validateAudioStreamUrl(targetUrl);
+        const cachedValidation = readRadioValidationCache(targetUrl, { maxAgeMs: RADIO_VALIDATION_CACHE_TTL_MS });
+        const validation = cachedValidation || await validateAudioStreamUrl(targetUrl);
+        writeRadioValidationCache(targetUrl, validation);
         const valid = validation && validation.ok === true;
         if (token !== radioStationValidationToken) return false;
         radioStationApplyPending = false;
@@ -6153,6 +6230,7 @@
       }
 
       if (normalizedSource === "radio") {
+        preloadNeighborRadioStations(normalizedStationUrl);
         const station = getRadioStationByUrl(normalizedStationUrl);
         showToast(`Radio channel switched: ${station.label}`, "success");
       } else if (sourceChanged) {
