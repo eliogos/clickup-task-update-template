@@ -346,6 +346,14 @@
   const REDUCED_MOTION_SCALE_CAP = 0.4;
   const INTERPOLATOR_MODE_OPTIONS = new Set(["preset", "expression", "curve"]);
   const AI_QUERY_PROVIDER_OPTIONS = new Set(["chatgpt", "claude", "perplexity", "grok", "gemini", "copilot"]);
+  const AI_QUERY_PROVIDER_LABELS = Object.freeze({
+    chatgpt: "ChatGPT",
+    claude: "Claude",
+    perplexity: "Perplexity",
+    grok: "Grok",
+    gemini: "Gemini",
+    copilot: "Bing Copilot"
+  });
   const AUDIO_BPM_INFLUENCE_MODE_OPTIONS = new Set(["animation", "both", "physics"]);
   const AUDIO_STREAM_SOURCE_OPTIONS = new Set(["lofi", "radio"]);
   const INTERPOLATOR_NERD_RATINGS = Object.freeze({
@@ -2498,8 +2506,8 @@
             </label>
             <label class="ai-provider-card">
               <input type="radio" name="ai-query-provider" value="copilot" data-ai-query-provider />
-              <img class="ai-provider-logo" src="https://cdn.simpleicons.org/githubcopilot/ffffff" alt="" aria-hidden="true" />
-              <span>Copilot</span>
+              <img class="ai-provider-logo" src="https://www.google.com/s2/favicons?domain=bing.com&sz=64" alt="" aria-hidden="true" />
+              <span>Bing Copilot</span>
             </label>
           </div>
           <p class="field-subtext">Currently used for interpolation Ask/Explain actions.</p>
@@ -3517,6 +3525,7 @@
         if (key === "perplexity") return "https://cdn.simpleicons.org/perplexity/ffffff";
         if (key === "grok") return "https://cdn.simpleicons.org/x/ffffff";
         if (key === "gemini") return "https://cdn.simpleicons.org/googlegemini/ffffff";
+        if (key === "copilot") return "https://www.google.com/s2/favicons?domain=bing.com&sz=64";
         return "";
       };
       const appendTooltipTokens = (container, lineText) => {
@@ -8207,7 +8216,7 @@
         const expressionForAi = interpolatorExpressionDirty
           ? interpolatorExpressionDraft
           : String(settingsState.interpolatorExpression || "");
-        const label = provider.charAt(0).toUpperCase() + provider.slice(1);
+        const label = AI_QUERY_PROVIDER_LABELS[provider] || (provider.charAt(0).toUpperCase() + provider.slice(1));
         interpolatorAskAiLink.href = buildInterpolatorAiQueryUrl(provider, expressionForAi);
         interpolatorAskAiLink.setAttribute("aria-label", `Ask AI (${label}) about interpolation expressions`);
         setElementTooltip(
@@ -8222,7 +8231,7 @@
         const expressionForAi = interpolatorExpressionDirty
           ? interpolatorExpressionDraft
           : String(settingsState.interpolatorExpression || "");
-        const label = provider.charAt(0).toUpperCase() + provider.slice(1);
+        const label = AI_QUERY_PROVIDER_LABELS[provider] || (provider.charAt(0).toUpperCase() + provider.slice(1));
         interpolatorExplainExpressionLink.href = buildInterpolatorExplainQueryUrl(provider, expressionForAi);
         interpolatorExplainExpressionLink.setAttribute("aria-label", `Explain current expression with ${label}`);
         setElementTooltip(
