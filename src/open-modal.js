@@ -407,12 +407,14 @@
     teal: 182,
     green: 146,
     amber: 40,
+    gold: 50,
     violet: 272,
     rose: 342
   });
   const ACCENT_PRESET_OKLCH_HUES = Object.freeze({
     ...ACCENT_PRESETS,
     amber: 92,
+    gold: 95,
     violet: 308,
     rose: 20
   });
@@ -434,6 +436,7 @@
     accentPreset: DEFAULT_ACCENT_PRESET,
     accentHue: DEFAULT_ACCENT_HUE,
     accentPartyMode: false,
+    goldenThemeUnlocked: false,
     uiFontSize: 13,
     editorFontSize: 13,
     animationSpeed: 2,
@@ -593,14 +596,18 @@
     const colorVisionMode = COLOR_VISION_OPTIONS.has(colorVisionRaw)
       ? colorVisionRaw
       : DEFAULT_MODAL_SETTINGS.colorVisionMode;
+    const goldenThemeUnlocked = source.goldenThemeUnlocked === true;
     const accentPresetRaw = String(
       source.accentPreset == null
         ? (source.accentColorPreset == null ? DEFAULT_MODAL_SETTINGS.accentPreset : source.accentColorPreset)
         : source.accentPreset
     ).trim().toLowerCase();
-    const accentPreset = ACCENT_PRESET_OPTIONS.has(accentPresetRaw)
+    const accentPresetCandidate = ACCENT_PRESET_OPTIONS.has(accentPresetRaw)
       ? accentPresetRaw
       : DEFAULT_MODAL_SETTINGS.accentPreset;
+    const accentPreset = accentPresetCandidate === "gold" && !goldenThemeUnlocked
+      ? DEFAULT_MODAL_SETTINGS.accentPreset
+      : accentPresetCandidate;
     const accentHue = clampNumber(
       source.accentHue,
       0,
@@ -814,6 +821,7 @@
       accentPreset,
       accentHue,
       accentPartyMode: source.accentPartyMode === true,
+      goldenThemeUnlocked,
       uiFontSize,
       editorFontSize,
       animationSpeed,
@@ -2948,6 +2956,31 @@
       partyFinalDoBtn.innerHTML = `<span aria-hidden="true">&nbsp;</span>`;
       sidebarNavEl.appendChild(partyFinalDoBtn);
     }
+    const PARTY_SIDEBAR_HALF_KEY_CONFIGS = Object.freeze([
+      Object.freeze({ id: "sidebar-party-half-cs", afterPage: "editor", note: "do-sharp" }),
+      Object.freeze({ id: "sidebar-party-half-ds", afterPage: "settings", note: "re-sharp" }),
+      Object.freeze({ id: "sidebar-party-half-fs", afterPage: "drafts", note: "fa-sharp" }),
+      Object.freeze({ id: "sidebar-party-half-gs", afterPage: "usage", note: "sol-sharp" }),
+      Object.freeze({ id: "sidebar-party-half-as", afterPage: "radio", note: "la-sharp" })
+    ]);
+    if (sidebarNavEl) {
+      PARTY_SIDEBAR_HALF_KEY_CONFIGS.forEach((config) => {
+        if (!config || !config.id || !config.afterPage || !config.note) return;
+        if (sidebarNavEl.querySelector(`#${config.id}`)) return;
+        const anchorBtn = sidebarNavEl.querySelector(`[data-page-target="${config.afterPage}"]`);
+        if (!anchorBtn) return;
+        const halfKeyBtn = document.createElement("button");
+        halfKeyBtn.className = "sidebar-page-btn sidebar-page-btn--party-halfkey";
+        halfKeyBtn.type = "button";
+        halfKeyBtn.id = config.id;
+        halfKeyBtn.hidden = true;
+        halfKeyBtn.setAttribute("aria-hidden", "true");
+        halfKeyBtn.setAttribute("aria-label", "Party easter egg half key");
+        halfKeyBtn.setAttribute("data-party-note", config.note);
+        halfKeyBtn.innerHTML = `<span aria-hidden="true">&nbsp;</span>`;
+        anchorBtn.insertAdjacentElement("afterend", halfKeyBtn);
+      });
+    }
 
     // Safety net for stale/cached templates: ensure overlay fragments exist.
     if (modalCardEl && !shadow.getElementById("modal-confetti-canvas")) {
@@ -3020,6 +3053,9 @@
     const pageButtons = Array.from(shadow.querySelectorAll("[data-page-target]"));
     const sidebarNav = byId("sidebar-nav");
     const partySidebarFinalDoBtn = byId("sidebar-party-final-do");
+    const partySidebarHalfKeyButtons = sidebarNav
+      ? Array.from(sidebarNav.querySelectorAll(".sidebar-page-btn--party-halfkey"))
+      : [];
     const pagePanels = Array.from(shadow.querySelectorAll("[data-page]"));
     const saveDraftBtn = byId("save-draft");
     const copyMainBtn = byId("copy-main") || byId("copy-html");
@@ -3050,6 +3086,7 @@
     const themeButtons = Array.from(shadow.querySelectorAll("[data-theme-option]"));
     const densityButtons = Array.from(shadow.querySelectorAll("[data-density-option]"));
     const accentPresetButtons = Array.from(shadow.querySelectorAll("[data-accent-preset]"));
+    const accentGoldenToggle = byId("accent-golden-toggle");
     const accentCustomTrigger = byId("accent-custom-trigger");
     const accentPartyToggle = byId("accent-party-toggle");
     const accentCustomPopover = byId("accent-custom-popover");
@@ -3312,6 +3349,8 @@
     let confettiRafId = 0;
     let confettiUntil = 0;
     let confettiParticles = [];
+    let goldenSparkleOverlay = null;
+    let goldenSparkleTimer = 0;
     let partySidebarHintShown = false;
     let partySidebarRapidClickTimes = [];
     let partySidebarMelody = [];
@@ -3821,6 +3860,7 @@
       }
       clearToastTimers();
       stopConfettiOverlay();
+      stopGoldenSparkles();
       stopAccentPartyMode();
       hideKonamiOverlay();
       radioStationValidationToken += 1;
@@ -4470,6 +4510,11 @@
       if (partyNote === "do-high") {
         return 1046.5;
       }
+      if (partyNote === "do-sharp") return 554.37;
+      if (partyNote === "re-sharp") return 622.25;
+      if (partyNote === "fa-sharp") return 739.99;
+      if (partyNote === "sol-sharp") return 830.61;
+      if (partyNote === "la-sharp") return 932.33;
       const page = String(button.getAttribute("data-page-target") || "").trim().toLowerCase();
       switch (page) {
         case "editor":
@@ -5426,11 +5471,86 @@
       }
     };
 
+    const ensureGoldenSparkleOverlay = () => {
+      if (!modalCard) return null;
+      if (!goldenSparkleOverlay) {
+        goldenSparkleOverlay = shadow.getElementById("modal-golden-sparkles") || null;
+      }
+      if (!goldenSparkleOverlay) {
+        goldenSparkleOverlay = document.createElement("div");
+        goldenSparkleOverlay.className = "modal-golden-sparkles";
+        goldenSparkleOverlay.id = "modal-golden-sparkles";
+        goldenSparkleOverlay.hidden = true;
+        goldenSparkleOverlay.setAttribute("aria-hidden", "true");
+        modalCard.appendChild(goldenSparkleOverlay);
+      }
+      return goldenSparkleOverlay;
+    };
+
+    const stopGoldenSparkles = () => {
+      if (goldenSparkleTimer) {
+        global.clearInterval(goldenSparkleTimer);
+        goldenSparkleTimer = 0;
+      }
+      if (!goldenSparkleOverlay) return;
+      goldenSparkleOverlay.classList.remove("is-active");
+      goldenSparkleOverlay.hidden = true;
+      while (goldenSparkleOverlay.firstChild) {
+        goldenSparkleOverlay.removeChild(goldenSparkleOverlay.firstChild);
+      }
+    };
+
+    const spawnGoldenSparkle = () => {
+      const overlay = ensureGoldenSparkleOverlay();
+      if (!overlay || !modalCard) return;
+      if (settingsState.accentPreset !== "gold") return;
+      const sparkle = document.createElement("span");
+      sparkle.className = "modal-golden-spark";
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const size = 6 + (Math.random() * 9);
+      const durationMs = 900 + Math.round(Math.random() * 1200);
+      sparkle.style.left = `${x.toFixed(2)}%`;
+      sparkle.style.top = `${y.toFixed(2)}%`;
+      sparkle.style.width = `${size.toFixed(2)}px`;
+      sparkle.style.height = `${size.toFixed(2)}px`;
+      sparkle.style.animationDuration = `${durationMs}ms`;
+      overlay.appendChild(sparkle);
+      global.setTimeout(() => {
+        if (sparkle.parentNode === overlay) {
+          overlay.removeChild(sparkle);
+        }
+      }, durationMs + 120);
+    };
+
+    const startGoldenSparkles = () => {
+      const overlay = ensureGoldenSparkleOverlay();
+      if (!overlay) return;
+      overlay.hidden = false;
+      overlay.classList.add("is-active");
+      if (goldenSparkleTimer) return;
+      goldenSparkleTimer = global.setInterval(() => {
+        if (settingsState.accentPreset !== "gold") {
+          stopGoldenSparkles();
+          return;
+        }
+        if (Math.random() < 0.62) {
+          spawnGoldenSparkle();
+        }
+      }, 340);
+    };
+
     const syncPartySidebarFinalDoVisibility = () => {
       if (!partySidebarFinalDoBtn || !sidebarNav) return;
       const enabled = settingsState.accentPartyMode === true;
       partySidebarFinalDoBtn.hidden = !enabled;
       partySidebarFinalDoBtn.setAttribute("aria-hidden", enabled ? "false" : "true");
+      if (partySidebarHalfKeyButtons.length) {
+        partySidebarHalfKeyButtons.forEach((button) => {
+          button.hidden = !enabled;
+          button.setAttribute("aria-hidden", enabled ? "false" : "true");
+        });
+      }
       if (!enabled) {
         partySidebarHintShown = false;
         partySidebarRapidClickTimes = [];
@@ -5439,10 +5559,44 @@
       }
     };
 
+    const SIDEBAR_NOTE_LABELS = Object.freeze({
+      editor: "Do/C",
+      settings: "Re/D",
+      variables: "Mi/E",
+      drafts: "Fa/F",
+      usage: "Sol/G",
+      radio: "La/A",
+      about: "Ti/B",
+      "do-sharp": "Do#/C#",
+      "re-sharp": "Re#/D#",
+      "fa-sharp": "Fa#/F#",
+      "sol-sharp": "Sol#/G#",
+      "la-sharp": "La#/A#",
+      "do-high": "Do/C (high)"
+    });
+
+    const syncSidebarPianoTooltips = () => {
+      if (!sidebarNav) return;
+      const sidebarButtons = Array.from(sidebarNav.querySelectorAll(".sidebar-page-btn"));
+      sidebarButtons.forEach((button) => {
+        const page = String(button.getAttribute("data-page-target") || "").trim().toLowerCase();
+        const partyNote = String(button.getAttribute("data-party-note") || "").trim().toLowerCase();
+        const noteLabel = SIDEBAR_NOTE_LABELS[partyNote || page] || "";
+        if (!noteLabel) return;
+        setElementTooltip(button, noteLabel);
+        button.setAttribute("aria-label", noteLabel);
+      });
+    };
+
     const getSidebarMelodyKeyFromButton = (button) => {
       if (!(button instanceof Element)) return "";
       const partyNote = String(button.getAttribute("data-party-note") || "").trim().toLowerCase();
       if (partyNote === "do-high") return "do-high";
+      if (partyNote === "do-sharp") return "do-sharp";
+      if (partyNote === "re-sharp") return "re-sharp";
+      if (partyNote === "fa-sharp") return "fa-sharp";
+      if (partyNote === "sol-sharp") return "sol-sharp";
+      if (partyNote === "la-sharp") return "la-sharp";
       const page = String(button.getAttribute("data-page-target") || "").trim().toLowerCase();
       switch (page) {
         case "editor": return "do";
@@ -5456,7 +5610,7 @@
       }
     };
 
-    const PARTY_TWINKLE_SEQUENCE = Object.freeze(["do", "do", "sol", "sol", "la", "la", "sol", "do-high"]);
+    const PARTY_TWINKLE_SEQUENCE = Object.freeze(["do", "do", "sol", "sol", "la", "la", "sol"]);
     const PARTY_ASCEND_SEQUENCE = Object.freeze(["do", "re", "mi", "fa", "sol", "la", "ti", "do-high"]);
     const PARTY_SIDEBAR_SPAM_WINDOW_MS = 2400;
     const PARTY_SIDEBAR_SPAM_TRIGGER_COUNT = 10;
@@ -5484,7 +5638,7 @@
 
       if (!partySidebarHintShown) {
         partySidebarHintShown = true;
-        showToast("🎵 Easter egg: Try Twinkle (Editor, Editor, Usage, Usage, Radio, Radio, Usage, empty key).", "muted", 3800);
+        showToast("🎵 Easter egg: Twinkle is Do Do So So La La So (Editor, Editor, Usage, Usage, Radio, Radio, Usage).", "muted", 3900);
       }
 
       partySidebarRapidClickTimes = partySidebarRapidClickTimes.filter((time) => (now - time) <= PARTY_SIDEBAR_SPAM_WINDOW_MS);
@@ -5508,8 +5662,18 @@
       }
 
       if (matchesMelodyTail(partySidebarMelody, PARTY_TWINKLE_SEQUENCE)) {
+        const newlyUnlocked = settingsState.goldenThemeUnlocked !== true;
+        if (newlyUnlocked) {
+          commitModalSettings({ goldenThemeUnlocked: true }, { preserveScroll: true, stabilizeScroll: false });
+        }
         launchConfettiOverlay(2100);
-        showToast("✨ Twinkle unlocked! Also try scale-up: Editor→Settings→Variables→Drafts→Usage→Radio→About→empty.", "success", 4300);
+        showToast(
+          newlyUnlocked
+            ? "✨ Golden theme unlocked! Find it in Appearance accent colors."
+            : "✨ Twinkle clear! Golden theme is already unlocked.",
+          "success",
+          4200
+        );
         partySidebarMelody = [];
         return;
       }
@@ -7166,8 +7330,18 @@
     };
 
     const syncAccentSettingUi = (resolvedHue) => {
+      if (accentGoldenToggle) {
+        const unlocked = settingsState.goldenThemeUnlocked === true;
+        accentGoldenToggle.hidden = !unlocked;
+        accentGoldenToggle.setAttribute("aria-hidden", unlocked ? "false" : "true");
+      }
       accentPresetButtons.forEach((button) => {
         const preset = String(button.getAttribute("data-accent-preset") || "").trim();
+        if (preset === "gold" && settingsState.goldenThemeUnlocked !== true) {
+          button.classList.remove("is-active");
+          button.setAttribute("aria-pressed", "false");
+          return;
+        }
         const isActive = preset === settingsState.accentPreset;
         button.classList.toggle("is-active", isActive);
         button.setAttribute("aria-pressed", isActive ? "true" : "false");
@@ -8267,6 +8441,9 @@
       const accentInvertMuted = resolvedTheme === "light"
         ? `oklch(0.73 0.09 ${accentInvertHue})`
         : `oklch(0.70 0.10 ${accentInvertHue})`;
+
+      const goldenThemeActive = settingsState.accentPreset === "gold" && settingsState.goldenThemeUnlocked === true;
+      modalCard.setAttribute("data-golden-theme", goldenThemeActive ? "true" : "false");
       modalCard.style.setProperty("--surface-button-primary", accentPrimary);
       modalCard.style.setProperty("--surface-button-primary-soft", accentSoft);
       modalCard.style.setProperty("--border-focus", accentFocus);
@@ -8274,6 +8451,47 @@
       modalCard.style.setProperty("--scroll-thumb-a", scrollA);
       modalCard.style.setProperty("--scroll-thumb-b", scrollB);
       modalCard.style.setProperty("--accent-invert-muted", accentInvertMuted);
+      if (goldenThemeActive) {
+        const goldHue = 95;
+        const goldenMain = resolvedTheme === "light"
+          ? `oklch(0.96 0.04 ${goldHue})`
+          : `oklch(0.28 0.05 ${goldHue})`;
+        const goldenMainSoft = resolvedTheme === "light"
+          ? `oklch(0.985 0.03 ${goldHue})`
+          : `oklch(0.33 0.06 ${goldHue})`;
+        const goldenButton = resolvedTheme === "light"
+          ? `oklch(0.90 0.07 ${goldHue})`
+          : `oklch(0.40 0.08 ${goldHue})`;
+        const goldenButtonSoft = resolvedTheme === "light"
+          ? `oklch(0.86 0.09 ${goldHue})`
+          : `oklch(0.45 0.10 ${goldHue})`;
+        const goldenBorder = resolvedTheme === "light"
+          ? `oklch(0.70 0.12 ${goldHue})`
+          : `oklch(0.74 0.11 ${goldHue})`;
+        modalCard.style.setProperty("--surface-main", goldenMain);
+        modalCard.style.setProperty("--surface-main-soft", goldenMainSoft);
+        modalCard.style.setProperty("--surface-button", goldenButton);
+        modalCard.style.setProperty("--surface-button-soft", goldenButtonSoft);
+        modalCard.style.setProperty("--surface-button-raised", goldenButton);
+        modalCard.style.setProperty("--surface-button-raised-soft", goldenButtonSoft);
+        modalCard.style.setProperty("--surface-picker", goldenMainSoft);
+        modalCard.style.setProperty("--surface-picker-soft", goldenMain);
+        modalCard.style.setProperty("--border-soft", goldenBorder);
+        modalCard.style.setProperty("--border-strong", goldenBorder);
+        startGoldenSparkles();
+      } else {
+        modalCard.style.removeProperty("--surface-main");
+        modalCard.style.removeProperty("--surface-main-soft");
+        modalCard.style.removeProperty("--surface-button");
+        modalCard.style.removeProperty("--surface-button-soft");
+        modalCard.style.removeProperty("--surface-button-raised");
+        modalCard.style.removeProperty("--surface-button-raised-soft");
+        modalCard.style.removeProperty("--surface-picker");
+        modalCard.style.removeProperty("--surface-picker-soft");
+        modalCard.style.removeProperty("--border-soft");
+        modalCard.style.removeProperty("--border-strong");
+        stopGoldenSparkles();
+      }
       if (modal && typeof global.getComputedStyle === "function") {
         const computedStyle = global.getComputedStyle(modalCard);
         modal.style.setProperty(
@@ -8371,6 +8589,7 @@
 
       syncAccentPartyMode();
       syncPartySidebarFinalDoVisibility();
+      syncSidebarPianoTooltips();
       syncAccentSettingUi(resolvedAccentHue);
 
       if (triggerTextInput) {
@@ -9178,6 +9397,17 @@
       });
     }
 
+    if (sidebarNav) {
+      sidebarNav.addEventListener("click", (event) => {
+        const target = event.target && typeof event.target.closest === "function"
+          ? event.target.closest(".sidebar-page-btn[data-party-note]")
+          : null;
+        if (!target) return;
+        if (target.hasAttribute("data-page-target")) return;
+        handlePartySidebarEasterEggInput(target);
+      });
+    }
+
     themeButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const value = button.getAttribute("data-theme-option");
@@ -9204,6 +9434,10 @@
       button.addEventListener("click", () => {
         const preset = String(button.getAttribute("data-accent-preset") || "").trim();
         if (!ACCENT_PRESET_OPTIONS.has(preset)) return;
+        if (preset === "gold" && settingsState.goldenThemeUnlocked !== true) {
+          showToast("Golden theme is still locked. Play the Party sidebar melody to unlock it.", "muted");
+          return;
+        }
         commitModalSettings({ accentPreset: preset, accentPartyMode: false });
       });
     });

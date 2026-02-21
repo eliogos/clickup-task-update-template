@@ -496,6 +496,23 @@
   pointer-events: none;
 }
 
+.sidebar-page-btn--party-halfkey {
+  width: 54%;
+  min-height: calc(var(--control-height) - 6px);
+  margin: -8px 0 -8px auto;
+  border-radius: 10px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--surface-main) 70%, #000 30%) 0%, color-mix(in oklab, var(--surface-main) 48%, #000 52%) 100%);
+  border-color: color-mix(in oklab, var(--border-soft) 72%, #000 28%);
+  color: transparent;
+  z-index: 2;
+}
+
+.sidebar-page-btn--party-halfkey > span {
+  opacity: 0;
+  user-select: none;
+  pointer-events: none;
+}
+
 .modal-main {
   min-width: 0;
   min-height: 0;
@@ -1296,6 +1313,11 @@
   border-color: color-mix(in oklab, var(--surface-button-primary-soft) 86%, #ffffff 14%);
   box-shadow: 0 0 0 2px color-mix(in oklab, var(--surface-button-primary-soft) 26%, transparent);
   background: linear-gradient(180deg, var(--surface-button-primary) 0%, var(--surface-button-primary-soft) 100%);
+}
+
+.accent-swatch-dot-golden {
+  border: 1px solid color-mix(in oklab, #9f7400 34%, transparent);
+  background: radial-gradient(circle at 32% 28%, #fff6c0 0%, #f0ca4e 44%, #be8a00 100%);
 }
 
 .accent-custom-popover {
@@ -2588,6 +2610,45 @@
 
 .modal-confetti-canvas.is-active {
   opacity: 1;
+}
+
+.modal-golden-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 23;
+  overflow: hidden;
+}
+
+.modal-golden-sparkles[hidden] {
+  display: none !important;
+}
+
+.modal-golden-spark {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, #fffbe0 0%, #ffd95a 45%, rgba(255, 188, 28, 0.85) 100%);
+  box-shadow:
+    0 0 8px rgba(255, 221, 128, 0.9),
+    0 0 16px rgba(255, 198, 58, 0.55);
+  opacity: 0;
+  animation: golden-spark-pop ease-out forwards;
+}
+
+@keyframes golden-spark-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(0deg);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1) rotate(22deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.2) rotate(70deg);
+  }
 }
 
 .swatch {
