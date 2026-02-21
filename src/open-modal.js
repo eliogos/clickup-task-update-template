@@ -3328,7 +3328,6 @@
     let goldenSparkleTimer = 0;
     let cursorSparkleOverlay = null;
     let cursorSparkleLastAt = 0;
-    let partySidebarHintShown = false;
     let partySidebarRapidClickTimes = [];
     let partySidebarMelody = [];
     let partySidebarMelodyLastAt = 0;
@@ -3849,7 +3848,6 @@
       radioLastValidationAt = 0;
       radioValidationCache.clear();
       radioPreloadInFlight.clear();
-      partySidebarHintShown = false;
       partySidebarRapidClickTimes = [];
       partySidebarMelody = [];
       partySidebarMelodyLastAt = 0;
@@ -5631,7 +5629,6 @@
         removePartySidebarKeys();
       }
       if (!enabled) {
-        partySidebarHintShown = false;
         partySidebarRapidClickTimes = [];
         partySidebarMelody = [];
         partySidebarMelodyLastAt = 0;
@@ -5723,11 +5720,6 @@
       const noteKey = getSidebarMelodyKeyFromButton(button);
       if (!noteKey) return;
       const now = Date.now();
-
-      if (!partySidebarHintShown) {
-        partySidebarHintShown = true;
-        showToast("🎵 Easter egg: Twinkle is Do Do So So La La So (Editor, Editor, Usage, Usage, Radio, Radio, Usage).", "muted", 3900);
-      }
 
       partySidebarRapidClickTimes = partySidebarRapidClickTimes.filter((time) => (now - time) <= PARTY_SIDEBAR_SPAM_WINDOW_MS);
       partySidebarRapidClickTimes.push(now);
