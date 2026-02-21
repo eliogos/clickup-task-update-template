@@ -1322,6 +1322,37 @@
   background: radial-gradient(circle at 32% 28%, #fff6c0 0%, #f0ca4e 44%, #be8a00 100%);
 }
 
+.accent-swatch-lock {
+  position: absolute;
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.accent-swatch-btn.is-locked {
+  border-color: color-mix(in oklab, var(--border-soft) 92%, #5e6679 8%);
+  color: var(--icon-muted);
+  filter: grayscale(0.95) saturate(0.55);
+  cursor: not-allowed;
+}
+
+.accent-swatch-btn.is-locked:hover {
+  border-color: color-mix(in oklab, var(--border-soft) 82%, #73809c 18%);
+  transform: none;
+}
+
+.accent-swatch-btn.is-locked .accent-swatch-lock {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.accent-swatch-btn.is-locked .accent-swatch-check {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
 .accent-custom-popover {
   display: none;
   width: min(280px, calc(100vw - 24px));

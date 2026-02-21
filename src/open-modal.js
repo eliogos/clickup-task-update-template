@@ -7420,8 +7420,11 @@
     const syncAccentSettingUi = (resolvedHue) => {
       if (accentGoldenToggle) {
         const unlocked = settingsState.goldenThemeUnlocked === true;
-        accentGoldenToggle.hidden = !unlocked;
-        accentGoldenToggle.setAttribute("aria-hidden", unlocked ? "false" : "true");
+        accentGoldenToggle.hidden = false;
+        accentGoldenToggle.setAttribute("aria-hidden", "false");
+        accentGoldenToggle.classList.toggle("is-locked", !unlocked);
+        setElementTooltip(accentGoldenToggle, unlocked ? "Golden" : "⭐ 🎹");
+        accentGoldenToggle.setAttribute("aria-label", unlocked ? "Golden accent" : "Golden accent locked");
       }
       accentPresetButtons.forEach((button) => {
         const preset = String(button.getAttribute("data-accent-preset") || "").trim();
@@ -9520,7 +9523,6 @@
         const preset = String(button.getAttribute("data-accent-preset") || "").trim();
         if (!ACCENT_PRESET_OPTIONS.has(preset)) return;
         if (preset === "gold" && settingsState.goldenThemeUnlocked !== true) {
-          showToast("Golden theme is still locked. Play the Party sidebar melody to unlock it.", "muted");
           return;
         }
         commitModalSettings({ accentPreset: preset, accentPartyMode: false });
