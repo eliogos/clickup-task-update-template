@@ -5572,6 +5572,17 @@
       const updateUi = (snapshot) => {
         const isPlaying = Boolean(snapshot && snapshot.playing);
         const isFailed = Boolean(snapshot && snapshot.failed);
+        const streamMode = snapshot && snapshot.streamMode ? String(snapshot.streamMode) : "idle";
+        const isLoading = !isFailed && (
+          (snapshot ? snapshot.streamBuffering === true : false)
+          || streamMode === "starting"
+          || streamMode === "initializing"
+          || streamMode === "fallback-initializing"
+          || streamMode === "connecting-gm"
+          || streamMode === "connecting-fetch"
+          || streamMode === "streaming-gm"
+          || streamMode === "streaming-fetch"
+        );
         const volume = snapshot && Number.isFinite(snapshot.volume) ? snapshot.volume : 0.35;
         const volumePercent = Math.round(volume * 100);
         lofiPlaybackSnapshot = {
@@ -5579,7 +5590,7 @@
           failed: isFailed,
           volume: clampNumber(volume, 0, 1, 0.35),
           streamUrl: snapshot && snapshot.streamUrl ? String(snapshot.streamUrl) : LOFI_STREAM_URL,
-          streamMode: snapshot && snapshot.streamMode ? String(snapshot.streamMode) : "idle",
+          streamMode,
           streamBuffering: snapshot ? snapshot.streamBuffering === true : false,
           streamPingMs: snapshot && Number.isFinite(snapshot.streamPingMs)
             ? Number(snapshot.streamPingMs)
@@ -5599,6 +5610,7 @@
         };
         lofiToggleBtn.disabled = isFailed;
         lofiToggleBtn.classList.toggle("is-playing", isPlaying && !isFailed);
+        lofiToggleBtn.classList.toggle("is-loading", isLoading);
         if (lofiVolumeInput) {
           lofiVolumeInput.disabled = isFailed;
           lofiVolumeInput.value = String(volumePercent);
@@ -5607,7 +5619,9 @@
           lofiVolumeInput.setAttribute("aria-label", `Music volume ${volumePercent} percent. Ctrl + M to mute.`);
         }
         if (iconNode) {
-          iconNode.textContent = isFailed ? "wifi_off" : (isPlaying ? "pause" : "play_arrow");
+          iconNode.textContent = isFailed
+            ? "wifi_off"
+            : (isLoading ? "progress_activity" : (isPlaying ? "pause" : "play_arrow"));
         }
         const playPauseTooltip = `${isPlaying ? "Pause music [Space]" : "Play music [Space]"} (when not typing)`;
         const title = isFailed

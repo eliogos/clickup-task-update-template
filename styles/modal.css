@@ -238,10 +238,19 @@
   background: linear-gradient(180deg, var(--surface-button-primary) 0%, var(--surface-button-primary-soft) 100%);
 }
 
+.lofi-toggle-btn.is-loading .material-symbols-outlined {
+  animation: lofi-toggle-spin 0.9s linear infinite;
+}
+
 .lofi-toggle-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   filter: grayscale(0.18);
+}
+
+@keyframes lofi-toggle-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .lofi-volume {
