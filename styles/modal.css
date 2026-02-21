@@ -483,6 +483,19 @@
   color: var(--icon-active);
 }
 
+.sidebar-page-btn--party-final {
+  justify-content: center;
+  text-align: center;
+  gap: 0;
+  color: transparent;
+}
+
+.sidebar-page-btn--party-final > span {
+  opacity: 0;
+  user-select: none;
+  pointer-events: none;
+}
+
 .modal-main {
   min-width: 0;
   min-height: 0;

@@ -2936,6 +2936,18 @@
         <span>Radio</span>`;
       sidebarNavEl.insertBefore(radioBtn, sidebarNavEl.querySelector('[data-page-target="about"]') || null);
     }
+    if (sidebarNavEl && !sidebarNavEl.querySelector("#sidebar-party-final-do")) {
+      const partyFinalDoBtn = document.createElement("button");
+      partyFinalDoBtn.className = "sidebar-page-btn sidebar-page-btn--party-final";
+      partyFinalDoBtn.type = "button";
+      partyFinalDoBtn.id = "sidebar-party-final-do";
+      partyFinalDoBtn.hidden = true;
+      partyFinalDoBtn.setAttribute("aria-hidden", "true");
+      partyFinalDoBtn.setAttribute("aria-label", "Party easter egg final Do key");
+      partyFinalDoBtn.setAttribute("data-party-note", "do-high");
+      partyFinalDoBtn.innerHTML = `<span aria-hidden="true">&nbsp;</span>`;
+      sidebarNavEl.appendChild(partyFinalDoBtn);
+    }
 
     // Safety net for stale/cached templates: ensure overlay fragments exist.
     if (modalCardEl && !shadow.getElementById("modal-confetti-canvas")) {
@@ -3006,6 +3018,8 @@
     const settingsSidebar = byId("settings-sidebar");
     const settingsToggle = byId("settings-toggle");
     const pageButtons = Array.from(shadow.querySelectorAll("[data-page-target]"));
+    const sidebarNav = byId("sidebar-nav");
+    const partySidebarFinalDoBtn = byId("sidebar-party-final-do");
     const pagePanels = Array.from(shadow.querySelectorAll("[data-page]"));
     const saveDraftBtn = byId("save-draft");
     const copyMainBtn = byId("copy-main") || byId("copy-html");
@@ -3298,6 +3312,11 @@
     let confettiRafId = 0;
     let confettiUntil = 0;
     let confettiParticles = [];
+    let partySidebarHintShown = false;
+    let partySidebarRapidClickTimes = [];
+    let partySidebarMelody = [];
+    let partySidebarMelodyLastAt = 0;
+    let partySidebarConfettiLastAt = 0;
     let iconNoTranslateObserver = null;
     let interpolatorExpressionFn = (t) => t;
     let interpolatorExpressionDraft = String(settingsState.interpolatorExpression || "");
@@ -3812,6 +3831,11 @@
       radioLastValidationAt = 0;
       radioValidationCache.clear();
       radioPreloadInFlight.clear();
+      partySidebarHintShown = false;
+      partySidebarRapidClickTimes = [];
+      partySidebarMelody = [];
+      partySidebarMelodyLastAt = 0;
+      partySidebarConfettiLastAt = 0;
       clearPendingSpaceShortcut();
       detachAmbientUnlockListeners();
       if (uiSfxAudioContext && uiSfxAudioContext.state !== "closed") {
@@ -4442,6 +4466,10 @@
       if (!(target instanceof Element)) return 659.25;
       const button = target.closest(".sidebar-page-btn");
       if (!button) return 659.25;
+      const partyNote = String(button.getAttribute("data-party-note") || "").trim().toLowerCase();
+      if (partyNote === "do-high") {
+        return 1046.5;
+      }
       const page = String(button.getAttribute("data-page-target") || "").trim().toLowerCase();
       switch (page) {
         case "editor":
@@ -5395,6 +5423,99 @@
         startAccentPartyMode();
       } else {
         stopAccentPartyMode();
+      }
+    };
+
+    const syncPartySidebarFinalDoVisibility = () => {
+      if (!partySidebarFinalDoBtn || !sidebarNav) return;
+      const enabled = settingsState.accentPartyMode === true;
+      partySidebarFinalDoBtn.hidden = !enabled;
+      partySidebarFinalDoBtn.setAttribute("aria-hidden", enabled ? "false" : "true");
+      if (!enabled) {
+        partySidebarHintShown = false;
+        partySidebarRapidClickTimes = [];
+        partySidebarMelody = [];
+        partySidebarMelodyLastAt = 0;
+      }
+    };
+
+    const getSidebarMelodyKeyFromButton = (button) => {
+      if (!(button instanceof Element)) return "";
+      const partyNote = String(button.getAttribute("data-party-note") || "").trim().toLowerCase();
+      if (partyNote === "do-high") return "do-high";
+      const page = String(button.getAttribute("data-page-target") || "").trim().toLowerCase();
+      switch (page) {
+        case "editor": return "do";
+        case "settings": return "re";
+        case "variables": return "mi";
+        case "drafts": return "fa";
+        case "usage": return "sol";
+        case "radio": return "la";
+        case "about": return "ti";
+        default: return "";
+      }
+    };
+
+    const PARTY_TWINKLE_SEQUENCE = Object.freeze(["do", "do", "sol", "sol", "la", "la", "sol", "do-high"]);
+    const PARTY_ASCEND_SEQUENCE = Object.freeze(["do", "re", "mi", "fa", "sol", "la", "ti", "do-high"]);
+    const PARTY_SIDEBAR_SPAM_WINDOW_MS = 2400;
+    const PARTY_SIDEBAR_SPAM_TRIGGER_COUNT = 10;
+    const PARTY_SIDEBAR_MELODY_GAP_MS = 2200;
+    const PARTY_SIDEBAR_CONFETTI_COOLDOWN_MS = 3800;
+
+    const matchesMelodyTail = (history, sequence) => {
+      const source = Array.isArray(history) ? history : [];
+      const target = Array.isArray(sequence) ? sequence : [];
+      if (!source.length || !target.length || source.length < target.length) return false;
+      const offset = source.length - target.length;
+      for (let index = 0; index < target.length; index += 1) {
+        if (source[offset + index] !== target[index]) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    const handlePartySidebarEasterEggInput = (button) => {
+      if (settingsState.accentPartyMode !== true) return;
+      const noteKey = getSidebarMelodyKeyFromButton(button);
+      if (!noteKey) return;
+      const now = Date.now();
+
+      if (!partySidebarHintShown) {
+        partySidebarHintShown = true;
+        showToast("🎵 Easter egg: Try Twinkle (Editor, Editor, Usage, Usage, Radio, Radio, Usage, empty key).", "muted", 3800);
+      }
+
+      partySidebarRapidClickTimes = partySidebarRapidClickTimes.filter((time) => (now - time) <= PARTY_SIDEBAR_SPAM_WINDOW_MS);
+      partySidebarRapidClickTimes.push(now);
+      if (
+        partySidebarRapidClickTimes.length >= PARTY_SIDEBAR_SPAM_TRIGGER_COUNT
+        && (now - partySidebarConfettiLastAt) > PARTY_SIDEBAR_CONFETTI_COOLDOWN_MS
+      ) {
+        partySidebarConfettiLastAt = now;
+        launchConfettiOverlay(1700);
+        showToast("🎉 Sidebar combo! Confetti encore.", "success");
+      }
+
+      if (partySidebarMelodyLastAt > 0 && (now - partySidebarMelodyLastAt) > PARTY_SIDEBAR_MELODY_GAP_MS) {
+        partySidebarMelody = [];
+      }
+      partySidebarMelodyLastAt = now;
+      partySidebarMelody.push(noteKey);
+      if (partySidebarMelody.length > 16) {
+        partySidebarMelody = partySidebarMelody.slice(-16);
+      }
+
+      if (matchesMelodyTail(partySidebarMelody, PARTY_TWINKLE_SEQUENCE)) {
+        launchConfettiOverlay(2100);
+        showToast("✨ Twinkle unlocked! Also try scale-up: Editor→Settings→Variables→Drafts→Usage→Radio→About→empty.", "success", 4300);
+        partySidebarMelody = [];
+        return;
+      }
+      if (matchesMelodyTail(partySidebarMelody, PARTY_ASCEND_SEQUENCE)) {
+        showToast("🎼 Scale clear! Nice easter-egg run.", "success");
+        partySidebarMelody = [];
       }
     };
 
@@ -8249,6 +8370,7 @@
       }
 
       syncAccentPartyMode();
+      syncPartySidebarFinalDoVisibility();
       syncAccentSettingUi(resolvedAccentHue);
 
       if (triggerTextInput) {
@@ -9040,6 +9162,7 @@
 
     pageButtons.forEach((button) => {
       button.addEventListener("click", () => {
+        handlePartySidebarEasterEggInput(button);
         const value = String(button.getAttribute("data-page-target") || "").trim();
         if (!PAGE_OPTIONS.has(value)) return;
         if (value === "editor") {
@@ -9048,6 +9171,12 @@
         commitModalSettings({ activePage: value });
       });
     });
+
+    if (partySidebarFinalDoBtn) {
+      partySidebarFinalDoBtn.addEventListener("click", () => {
+        handlePartySidebarEasterEggInput(partySidebarFinalDoBtn);
+      });
+    }
 
     themeButtons.forEach((button) => {
       button.addEventListener("click", () => {
