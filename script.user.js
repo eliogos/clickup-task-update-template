@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ClickUp --update Modal
 // @namespace    clickup-update-modal
-// @version      15.0.1
+// @version      15.0.2
 // @description  Insert update template in ClickUp
 // @match        https://app.clickup.com/*
 // @grant        GM_getResourceText
@@ -16,11 +16,15 @@
 // @connect      *.zeno.fm
 // @connect      live-streams.nl
 // @connect      mscp3.live-streams.nl
+// @connect      radioboss.fm
+// @connect      c22.radioboss.fm
 // @connect      *.radioboss.fm
 // @connect      *.live-streams.nl
 // @connect      internet-radio.com
 // @connect      uk7.internet-radio.com
 // @connect      *.internet-radio.com
+// @connect      radioca.st
+// @connect      magic.radioca.st
 // @connect      *.radioca.st
 // @connect      pixabay.com
 // @connect      *.pixabay.com

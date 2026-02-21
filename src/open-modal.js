@@ -1859,6 +1859,13 @@
                   </div>
                   <p class="field-subtext" id="usage-settings-text">0 B (0.00%).</p>
                 </div>
+                <div class="settings-field">
+                  <p class="settings-label">Others (used by ClickUp)</p>
+                  <div class="usage-meter" id="usage-others-meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Other local storage usage">
+                    <span class="usage-meter-fill" id="usage-others-fill"></span>
+                  </div>
+                  <p class="field-subtext" id="usage-others-text">0 B (0.00%).</p>
+                </div>
               </div>
               <p class="field-subtext" id="usage-storage-limit-note">
                 Estimated localStorage limit is around 5 MiB on most browsers.
@@ -2301,6 +2308,9 @@
     const usageSettingsMeter = byId("usage-settings-meter");
     const usageSettingsFill = byId("usage-settings-fill");
     const usageSettingsText = byId("usage-settings-text");
+    const usageOthersMeter = byId("usage-others-meter");
+    const usageOthersFill = byId("usage-others-fill");
+    const usageOthersText = byId("usage-others-text");
     const usageResetSettingsBtn = byId("usage-reset-settings-btn");
     const themeGroup = byId("theme-group");
     const densityGroup = byId("density-group");
@@ -2537,6 +2547,19 @@
       }
       if (usageSettingsText) {
         usageSettingsText.textContent = `${formatBytes(settingsBytes)} (${settingsPercent.toFixed(2)}%).`;
+      }
+
+      const otherBytes = Math.max(0, usedBytes - draftsBytes - settingsBytes);
+      const othersRatio = Math.max(0, Math.min(1, otherBytes / Math.max(1, maxBytes)));
+      const othersPercent = othersRatio * 100;
+      if (usageOthersFill) {
+        usageOthersFill.style.width = `${othersPercent.toFixed(2)}%`;
+      }
+      if (usageOthersMeter) {
+        usageOthersMeter.setAttribute("aria-valuenow", othersPercent.toFixed(2));
+      }
+      if (usageOthersText) {
+        usageOthersText.textContent = `${formatBytes(otherBytes)} (${othersPercent.toFixed(2)}%).`;
       }
     };
 
