@@ -2930,6 +2930,10 @@
             entry.audio.removeAttribute("src");
             entry.audio.load();
           } catch {}
+          if (entry.objectUrl) {
+            try { URL.revokeObjectURL(entry.objectUrl); } catch {}
+            entry.objectUrl = "";
+          }
         }
       });
       ambientTrackState.clear();
@@ -4566,7 +4570,86 @@
       audio.loop = false;
       audio.src = config.url;
       audio.volume = 0;
-      const entry = { audio, restartTimer: 0 };
+      const entry = {
+        audio,
+        restartTimer: 0,
+        objectUrl: "",
+        gmFallbackAttempted: false,
+        gmFallbackPromise: null,
+        unavailableNotified: false
+      };
+      const playWithFallback = () => {
+        const attemptPlay = () => {
+          try {
+            const playPromise = audio.play();
+            if (playPromise && typeof playPromise.catch === "function") {
+              playPromise.catch(() => {
+                if (entry.gmFallbackAttempted) return;
+                entry.gmFallbackAttempted = true;
+                if (typeof global.GM_xmlhttpRequest !== "function") {
+                  if (!entry.unavailableNotified) {
+                    entry.unavailableNotified = true;
+                    showToast(`SFX unavailable: ${config.label}.`, "error");
+                  }
+                  return;
+                }
+                if (!entry.gmFallbackPromise) {
+                  entry.gmFallbackPromise = new Promise((resolve) => {
+                    try {
+                      global.GM_xmlhttpRequest({
+                        method: "GET",
+                        url: config.url,
+                        responseType: "blob",
+                        timeout: 6000,
+                        onload: (response) => {
+                          const status = Number(response && response.status);
+                          const blob = response && response.response;
+                          if (!Number.isFinite(status) || status < 200 || status >= 400 || !(blob instanceof Blob)) {
+                            resolve(false);
+                            return;
+                          }
+                          try {
+                            const nextObjectUrl = URL.createObjectURL(blob);
+                            if (entry.objectUrl) {
+                              try { URL.revokeObjectURL(entry.objectUrl); } catch {}
+                            }
+                            entry.objectUrl = nextObjectUrl;
+                            audio.src = nextObjectUrl;
+                            resolve(true);
+                          } catch {
+                            resolve(false);
+                          }
+                        },
+                        ontimeout: () => resolve(false),
+                        onerror: () => resolve(false),
+                        onabort: () => resolve(false)
+                      });
+                    } catch {
+                      resolve(false);
+                    }
+                  });
+                }
+                entry.gmFallbackPromise.then((ok) => {
+                  if (!ok) {
+                    if (!entry.unavailableNotified) {
+                      entry.unavailableNotified = true;
+                      showToast(`SFX unavailable: ${config.label}.`, "error");
+                    }
+                    return;
+                  }
+                  if (closed || !isAmbientTrackEnabled(trackId)) return;
+                  audio.currentTime = 0;
+                  audio.volume = clampNumber(getAmbientTrackVolumePercent(trackId) / 100, 0, 1, 0);
+                  audio.play().catch(() => {});
+                });
+              });
+            }
+          } catch {
+            // Ignore play start errors; async fallback handles loading failures.
+          }
+        };
+        attemptPlay();
+      };
       audio.addEventListener("ended", () => {
         if (closed) return;
         if (!isAmbientTrackEnabled(trackId)) return;
@@ -4577,8 +4660,11 @@
           const liveVolume = getAmbientTrackVolumePercent(trackId) / 100;
           audio.volume = clampNumber(liveVolume, 0, 1, 0);
           audio.currentTime = 0;
-          audio.play().catch(() => {});
+          playWithFallback();
         }, delayMs);
+      });
+      audio.addEventListener("error", () => {
+        playWithFallback();
       });
       ambientTrackState.set(trackId, entry);
       return entry;
@@ -4601,7 +4687,18 @@
         return;
       }
       if (entry.audio.paused || entry.audio.ended) {
-        entry.audio.play().catch(() => {});
+        try {
+          const playPromise = entry.audio.play();
+          if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(() => {
+              if (typeof entry.audio.dispatchEvent === "function") {
+                try {
+                  entry.audio.dispatchEvent(new Event("error"));
+                } catch {}
+              }
+            });
+          }
+        } catch {}
       }
     };
 

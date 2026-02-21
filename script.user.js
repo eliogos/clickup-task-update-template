@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ClickUp --update Modal
 // @namespace    clickup-update-modal
-// @version      15.0.0
+// @version      15.0.1
 // @description  Insert update template in ClickUp
 // @match        https://app.clickup.com/*
 // @grant        GM_getResourceText
@@ -9,11 +9,22 @@
 // @connect      ec3.yesstreaming.net
 // @connect      yesstreaming.net
 // @connect      *.yesstreaming.net
+// @connect      zeno.fm
+// @connect      stream.zeno.fm
+// @connect      stream-142.zeno.fm
+// @connect      stream-148.zeno.fm
 // @connect      *.zeno.fm
+// @connect      live-streams.nl
+// @connect      mscp3.live-streams.nl
 // @connect      *.radioboss.fm
 // @connect      *.live-streams.nl
+// @connect      internet-radio.com
+// @connect      uk7.internet-radio.com
 // @connect      *.internet-radio.com
 // @connect      *.radioca.st
+// @connect      pixabay.com
+// @connect      *.pixabay.com
+// @connect      cdn.pixabay.com
 // @resource     rootCss https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/styles/root.css
 // @resource     modalMotionCss https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/styles/animations/motion.css
 // @resource     modalCss https://raw.githubusercontent.com/eliogos/clickup-task-update-template/main/styles/modal.css
