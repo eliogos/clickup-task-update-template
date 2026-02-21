@@ -1313,19 +1313,25 @@
       if (sourceInitPromise) return await sourceInitPromise;
       sourceInitPromise = (async () => {
         const targetUrl = currentStreamUrl;
-        const isHttpTarget = /^http:\/\//i.test(targetUrl);
-        const ok = isHttpTarget
-          ? await streamViaGm(targetUrl)
-          : await streamViaGm(targetUrl) || await streamViaFetch(targetUrl);
+        const tryInitStream = async (url) => {
+          const isHttpTarget = /^http:\/\//i.test(url);
+          if (isHttpTarget) return await streamViaGm(url);
+          return await streamViaGm(url) || await streamViaFetch(url);
+        };
+        let ok = await tryInitStream(targetUrl);
         if (targetUrl !== currentStreamUrl) {
           sourceReady = false;
           sourceInitPromise = null;
           return false;
         }
         if (!ok) {
-          audio.src = targetUrl;
+          if (targetUrl !== LOFI_STREAM_URL) {
+            // Safety fallback so radio failures do not leave the player silent.
+            currentStreamUrl = LOFI_STREAM_URL;
+            ok = await tryInitStream(LOFI_STREAM_URL);
+          }
         }
-        sourceReady = true;
+        sourceReady = ok === true;
         return ok;
       })();
       return await sourceInitPromise;
@@ -1525,7 +1531,11 @@
       state.failed = false;
       try {
         stopVolumeFade();
-        await ensureLofiSource();
+        const sourceOk = await ensureLofiSource();
+        if (!sourceOk) {
+          setFailure("Failed to load stream.");
+          return false;
+        }
         await ensureSpatialPipeline();
         const targetVolume = Math.max(0, Math.min(1, Number(state.volume)));
         if (fadeInMs > 0) {
