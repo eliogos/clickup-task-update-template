@@ -6088,6 +6088,26 @@
         return true;
       }
 
+      const playbackIntentStreamModes = new Set([
+        "starting",
+        "initializing",
+        "fallback-initializing",
+        "connecting-gm",
+        "connecting-fetch",
+        "streaming-gm",
+        "streaming-fetch",
+        "ready-gm",
+        "ready-fetch",
+        "playing",
+        "stalled"
+      ]);
+      const currentMode = String(lofiPlaybackSnapshot && lofiPlaybackSnapshot.streamMode || "").trim().toLowerCase();
+      const preservePlaybackIntent = normalizedSource === "radio" && (
+        lofiPlaybackSnapshot.playing === true
+        || lofiPlaybackSnapshot.streamBuffering === true
+        || playbackIntentStreamModes.has(currentMode)
+      );
+
       const targetUrl = normalizedSource === "radio"
         ? normalizedStationUrl
         : LOFI_STREAM_URL;
@@ -6121,6 +6141,16 @@
         },
         { preserveScroll: true, stabilizeScroll: false }
       );
+
+      if (preservePlaybackIntent && app._lofiController && typeof app._lofiController.getAudioElement === "function" && typeof app._lofiController.toggle === "function") {
+        const audioElement = app._lofiController.getAudioElement();
+        if (audioElement && audioElement.paused) {
+          const resumeResult = app._lofiController.toggle();
+          if (resumeResult && typeof resumeResult.catch === "function") {
+            resumeResult.catch(() => {});
+          }
+        }
+      }
 
       if (normalizedSource === "radio") {
         const station = getRadioStationByUrl(normalizedStationUrl);
