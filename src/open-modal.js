@@ -2944,18 +2944,6 @@
         <span>Radio</span>`;
       sidebarNavEl.insertBefore(radioBtn, sidebarNavEl.querySelector('[data-page-target="about"]') || null);
     }
-    if (sidebarNavEl && !sidebarNavEl.querySelector("#sidebar-party-final-do")) {
-      const partyFinalDoBtn = document.createElement("button");
-      partyFinalDoBtn.className = "sidebar-page-btn sidebar-page-btn--party-final";
-      partyFinalDoBtn.type = "button";
-      partyFinalDoBtn.id = "sidebar-party-final-do";
-      partyFinalDoBtn.hidden = true;
-      partyFinalDoBtn.setAttribute("aria-hidden", "true");
-      partyFinalDoBtn.setAttribute("aria-label", "Party easter egg final Do key");
-      partyFinalDoBtn.setAttribute("data-party-note", "do-high");
-      partyFinalDoBtn.innerHTML = `<span aria-hidden="true">&nbsp;</span>`;
-      sidebarNavEl.appendChild(partyFinalDoBtn);
-    }
     const PARTY_SIDEBAR_HALF_KEY_CONFIGS = Object.freeze([
       Object.freeze({ id: "sidebar-party-half-cs", afterPage: "editor", note: "do-sharp" }),
       Object.freeze({ id: "sidebar-party-half-ds", afterPage: "settings", note: "re-sharp" }),
@@ -2963,24 +2951,6 @@
       Object.freeze({ id: "sidebar-party-half-gs", afterPage: "usage", note: "sol-sharp" }),
       Object.freeze({ id: "sidebar-party-half-as", afterPage: "radio", note: "la-sharp" })
     ]);
-    if (sidebarNavEl) {
-      PARTY_SIDEBAR_HALF_KEY_CONFIGS.forEach((config) => {
-        if (!config || !config.id || !config.afterPage || !config.note) return;
-        if (sidebarNavEl.querySelector(`#${config.id}`)) return;
-        const anchorBtn = sidebarNavEl.querySelector(`[data-page-target="${config.afterPage}"]`);
-        if (!anchorBtn) return;
-        const halfKeyBtn = document.createElement("button");
-        halfKeyBtn.className = "sidebar-page-btn sidebar-page-btn--party-halfkey";
-        halfKeyBtn.type = "button";
-        halfKeyBtn.id = config.id;
-        halfKeyBtn.hidden = true;
-        halfKeyBtn.setAttribute("aria-hidden", "true");
-        halfKeyBtn.setAttribute("aria-label", "Party easter egg half key");
-        halfKeyBtn.setAttribute("data-party-note", config.note);
-        halfKeyBtn.innerHTML = `<span aria-hidden="true">&nbsp;</span>`;
-        anchorBtn.insertAdjacentElement("afterend", halfKeyBtn);
-      });
-    }
 
     // Safety net for stale/cached templates: ensure overlay fragments exist.
     if (modalCardEl && !shadow.getElementById("modal-confetti-canvas")) {
@@ -3052,8 +3022,8 @@
     const settingsToggle = byId("settings-toggle");
     const pageButtons = Array.from(shadow.querySelectorAll("[data-page-target]"));
     const sidebarNav = byId("sidebar-nav");
-    const partySidebarFinalDoBtn = byId("sidebar-party-final-do");
-    const partySidebarHalfKeyButtons = sidebarNav
+    let partySidebarFinalDoBtn = byId("sidebar-party-final-do");
+    let partySidebarHalfKeyButtons = sidebarNav
       ? Array.from(sidebarNav.querySelectorAll(".sidebar-page-btn--party-halfkey"))
       : [];
     const pagePanels = Array.from(shadow.querySelectorAll("[data-page]"));
@@ -5544,6 +5514,48 @@
       }, 340);
     };
 
+    const ensurePartySidebarKeys = () => {
+      if (!sidebarNav) return;
+      if (!partySidebarFinalDoBtn || !sidebarNav.contains(partySidebarFinalDoBtn)) {
+        const partyFinalDo = document.createElement("button");
+        partyFinalDo.className = "sidebar-page-btn sidebar-page-btn--party-final";
+        partyFinalDo.type = "button";
+        partyFinalDo.id = "sidebar-party-final-do";
+        partyFinalDo.setAttribute("aria-label", "Party easter egg final Do key");
+        partyFinalDo.setAttribute("data-party-note", "do-high");
+        partyFinalDo.innerHTML = `<span aria-hidden="true">&nbsp;</span>`;
+        sidebarNav.appendChild(partyFinalDo);
+        partySidebarFinalDoBtn = partyFinalDo;
+      }
+      PARTY_SIDEBAR_HALF_KEY_CONFIGS.forEach((config) => {
+        if (!config || !config.id || !config.afterPage || !config.note) return;
+        if (sidebarNav.querySelector(`#${config.id}`)) return;
+        const anchorBtn = sidebarNav.querySelector(`[data-page-target="${config.afterPage}"]`);
+        if (!anchorBtn) return;
+        const halfKeyBtn = document.createElement("button");
+        halfKeyBtn.className = "sidebar-page-btn sidebar-page-btn--party-halfkey";
+        halfKeyBtn.type = "button";
+        halfKeyBtn.id = config.id;
+        halfKeyBtn.setAttribute("aria-label", "Party easter egg half key");
+        halfKeyBtn.setAttribute("data-party-note", config.note);
+        halfKeyBtn.innerHTML = `<span aria-hidden="true">&nbsp;</span>`;
+        anchorBtn.insertAdjacentElement("afterend", halfKeyBtn);
+      });
+      partySidebarHalfKeyButtons = Array.from(sidebarNav.querySelectorAll(".sidebar-page-btn--party-halfkey"));
+    };
+
+    const removePartySidebarKeys = () => {
+      if (!sidebarNav) return;
+      const keys = Array.from(sidebarNav.querySelectorAll(".sidebar-page-btn--party-halfkey, #sidebar-party-final-do"));
+      keys.forEach((node) => {
+        if (node && node.parentNode === sidebarNav) {
+          sidebarNav.removeChild(node);
+        }
+      });
+      partySidebarFinalDoBtn = null;
+      partySidebarHalfKeyButtons = [];
+    };
+
     const ensureCursorSparkleOverlay = () => {
       if (!modalCard) return null;
       if (!cursorSparkleOverlay) {
@@ -5605,15 +5617,12 @@
     };
 
     const syncPartySidebarFinalDoVisibility = () => {
-      if (!partySidebarFinalDoBtn || !sidebarNav) return;
+      if (!sidebarNav) return;
       const enabled = settingsState.accentPartyMode === true;
-      partySidebarFinalDoBtn.hidden = !enabled;
-      partySidebarFinalDoBtn.setAttribute("aria-hidden", enabled ? "false" : "true");
-      if (partySidebarHalfKeyButtons.length) {
-        partySidebarHalfKeyButtons.forEach((button) => {
-          button.hidden = !enabled;
-          button.setAttribute("aria-hidden", enabled ? "false" : "true");
-        });
+      if (enabled) {
+        ensurePartySidebarKeys();
+      } else {
+        removePartySidebarKeys();
       }
       if (!enabled) {
         partySidebarHintShown = false;
@@ -9463,12 +9472,6 @@
         commitModalSettings({ activePage: value });
       });
     });
-
-    if (partySidebarFinalDoBtn) {
-      partySidebarFinalDoBtn.addEventListener("click", () => {
-        handlePartySidebarEasterEggInput(partySidebarFinalDoBtn);
-      });
-    }
 
     if (sidebarNav) {
       sidebarNav.addEventListener("click", (event) => {
