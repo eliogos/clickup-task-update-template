@@ -5577,11 +5577,20 @@
 
     const syncSidebarPianoTooltips = () => {
       if (!sidebarNav) return;
+      const partyModeEnabled = settingsState.accentPartyMode === true;
       const sidebarButtons = Array.from(sidebarNav.querySelectorAll(".sidebar-page-btn"));
       sidebarButtons.forEach((button) => {
         const page = String(button.getAttribute("data-page-target") || "").trim().toLowerCase();
         const partyNote = String(button.getAttribute("data-party-note") || "").trim().toLowerCase();
         const noteLabel = SIDEBAR_NOTE_LABELS[partyNote || page] || "";
+        if (!partyModeEnabled) {
+          setElementTooltip(button, "");
+          if (page) {
+            const visibleLabel = String(button.textContent || "").trim().replace(/\s+/g, " ");
+            button.setAttribute("aria-label", visibleLabel || page);
+          }
+          return;
+        }
         if (!noteLabel) return;
         setElementTooltip(button, noteLabel);
         button.setAttribute("aria-label", noteLabel);
